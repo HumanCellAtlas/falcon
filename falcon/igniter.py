@@ -59,7 +59,8 @@ class Igniter(object):
                     caas_key=self.settings.get('caas_key')
                 )
                 if response.status_code != 200:
-                    logger.warning('Igniter | {0} | {1}'.format(response.text, datetime.now()))
+                    logger.warning('Igniter | Failed to start a workflow {0} | {1}'.format(candidate, datetime.now()))
+                    logger.info('Igniter | {0} | {1}'.format(response.text, datetime.now()))
                 else:
                     logger.info('Igniter | Ignited a workflow {0} | {1}'.format(candidate, datetime.now()))
 
