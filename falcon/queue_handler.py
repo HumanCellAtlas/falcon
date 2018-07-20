@@ -31,7 +31,7 @@ class Workflow(object):
 
     def __eq__(self, other):
         if isinstance(other, Workflow):
-            return self.id == other.id and self.bundle_uuid == other.bundle_uuid
+            return self.id == other.id
         return False
 
 
@@ -73,36 +73,53 @@ class Queue_Handler(object):
         time.sleep(sleep_time)
 
     def retrieve_queue(self, query_dict):
-        """Retrieve the latest set of "Ob Hold" workflows from Cromwell and put them in the in-memory queue.
+        """Retrieve the latest set of "On Hold" workflows from Cromwell and put them in the in-memory queue.
 
         Args:
             query_dict (dict): A dictionary that contains valid query parameters which can be accepted by the Cromwell
             /query  endpoint.
         """
-        # workflows should be a list that ordered by submission time, oldest first
-        workflows = cromwell_tools.query_workflows(
+        # workflows should be a list that ordered by submission time, oldest first, not true anymore after Cromwell v34
+        response = cromwell_tools.query_workflows(
             cromwell_url=self.cromwell_url,
             query_dict=query_dict,
             cromwell_user=self.settings.get('cromwell_user'),
             cromwell_password=self.settings.get('cromwell_password'),
             caas_key=self.settings.get('caas_key')
-        ).json()['results']
+        )
 
-        logger.info('Queue | Retrieved {0} workflows from Cromwell. | {1}'.format(len(workflows), datetime.now()))
+        if response.status_code != 200:
+            logger.warning('Queue | Failed to retrieve workflows from Cromwell | {0}'.format(datetime.now()))
+            logger.info('Queue | {0} | {1}'.format(response.text, datetime.now()))
+        else:
+            workflow_metas = response.json()['results']
 
-        # store the latest submission timestamp to save computation time for later updates
-        self.last_submission = workflows[-1].get('submission')
+            # TODO: This count-inconsistency issue has been fixed after Cromwell v34
+            results_count = response.json()['totalResultsCount']
+            workflow_num = results_count if results_count == len(workflow_metas) else len(workflow_metas)
 
-        # placeholder for the de-duplication logic
-        for workflow in workflows:
-            workflow = Workflow(workflow.get('workflow_id'), workflow.get('bundle-uuid'))
+            logger.info('Queue | Retrieved {0} workflows from Cromwell. | {1}'.format(workflow_num, datetime.now()))
 
-            logger.debug(
-                'Queue | Enqueuing workflow {0} | {1}'.format(workflow, datetime.now()))
+            if workflow_num:
+                # store the latest submission timestamp to save computation time for later updates
+                # TODO: from Cromwell v34 (https://github.com/broadinstitute/cromwell/releases/tag/34), Query results will
+                # be returned in reverse chronological order, with the most-recently submitted workflows returned first,
+                # the logic here need to be updated.
+                self.last_submission = workflow_metas[-1].get('submission')
 
-            self.workflow_queue.put(self.deep_deduplicate(
-                self.shallow_deduplicate(workflow)
-            ))
+                # placeholder for the de-duplication logic
+                for workflow_meta in workflow_metas:
+
+                    workflow_id = workflow_meta.get('workflow_id')
+                    workflow_labels = workflow_meta.get('labels')  # TODO: Integrate this field into Workflow class
+                    workflow_bundle_uuid = workflow_labels.get('bundle-uuid') if isinstance(workflow_labels, dict) else None
+
+                    workflow = Workflow(workflow_id, workflow_bundle_uuid)
+
+                    logger.debug(
+                        'Queue | Enqueuing workflow {0} | {1}'.format(workflow, datetime.now()))
+
+                    self.workflow_queue.put(workflow)  # TODO: Implement and add de-duplication logic here
 
     def execution(self):
         logger.info(
@@ -117,17 +134,17 @@ class Queue_Handler(object):
 
     @staticmethod
     def shallow_deduplicate(ls):
-        """A placeholder function for de-duplication logic.
+        """A placeholder function for de-duplication logic, not implemented yet.
 
         This shallow de-duplication should only search given bundle-uuid and bundle-version in the current domain,
         e.g. notifications in the queue.
         """
-        return ls
+        return NotImplemented
 
     @staticmethod
     def deep_deduplicate(ls):
-        """A placeholder function for de-duplication logic.
+        """A placeholder function for de-duplication logic, not implemented yet.
 
         This deep de-duplication should search the given bundle-uuid and bundle-version in the whole history.
         """
-        return ls
+        return NotImplemented

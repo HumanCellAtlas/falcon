@@ -25,7 +25,7 @@ class Igniter(object):
         self.settings = get_settings(config_path)
         self.cromwell_url = self.settings.get('cromwell_url')
 
-    def spawn_and_run(self, mem_queue_from_handler):
+    def spawn_and_start(self, mem_queue_from_handler):
         if not isinstance(mem_queue_from_handler, multiprocessing.queues.Queue):
             raise TypeError('Igniter has to get a shared Queue object from Queue_Handler to start!')
 
@@ -34,7 +34,10 @@ class Igniter(object):
         self.process.start()
 
     def join(self):
-        self.process.join()
+        try:
+            self.process.join()
+        except AssertionError:
+            logger.error('The process of this igniter is not in a running state.')
 
     @staticmethod
     def sleep_for(sleep_time):
@@ -55,7 +58,11 @@ class Igniter(object):
                     cromwell_password=self.settings.get('cromwell_password'),
                     caas_key=self.settings.get('caas_key')
                 )
-                logger.info('Igniter | Ignited a workflow {0} | {1}'.format(candidate, datetime.now()))
+                if response.status_code != 200:
+                    logger.warning('Igniter | Failed to start a workflow {0} | {1}'.format(candidate, datetime.now()))
+                    logger.info('Igniter | {0} | {1}'.format(response.text, datetime.now()))
+                else:
+                    logger.info('Igniter | Ignited a workflow {0} | {1}'.format(candidate, datetime.now()))
 
             except queue.Empty:
                 logger.info(
