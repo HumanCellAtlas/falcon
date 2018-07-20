@@ -36,14 +36,7 @@ def get_settings(config_path):
             settings['caas_key'] = os.environ.get('caas_key')
 
     # Check other config parameters
-    if not settings['queue_update_interval']:
-        settings['queue_update_interval'] = 10
-    else:
-        settings['queue_update_interval'] = int(settings['queue_update_interval'])
-
-    if not settings['workflow_start_interval']:
-        settings['workflow_start_interval'] = 1
-    else:
-        settings['workflow_start_interval'] = int(settings['workflow_start_interval'])
+    settings['queue_update_interval'] = int(settings.get('queue_update_interval', 1))
+    settings['workflow_start_interval'] = int(settings.get('workflow_start_interval', 1))
 
     return settings
