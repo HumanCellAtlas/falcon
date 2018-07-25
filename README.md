@@ -19,8 +19,8 @@ A valid config.json file should look like:
     "cromwell_user": "test",
     "cromwell_password": "test",
     "collection_name": "lira-dev-workflows",
-    "queue_update_interval": 10,
-    "workflow_start_interval": 1
+    "queue_update_interval": 60,
+    "workflow_start_interval": 10
 }
 ```
 

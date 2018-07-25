@@ -22,6 +22,7 @@ class Igniter(object):
             config_path (str): Path to the config.json file.
         """
         self.process = None
+        self.process_id = None
         self.settings = get_settings(config_path)
         self.cromwell_url = self.settings.get('cromwell_url')
 
@@ -31,6 +32,7 @@ class Igniter(object):
 
         if not self.process:
             self.process = Process(target=self.execution, args=(mem_queue_from_handler,))
+            self.process_id = os.getpid()
         self.process.start()
 
     def join(self):
