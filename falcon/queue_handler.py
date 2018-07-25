@@ -15,8 +15,7 @@ logger = logging.getLogger('falcon.{module_path}'.format(module_path=__name__))
 class Workflow(object):
     """A simple data structure for hosting workflow data.
 
-    Besides the features for de-duplication, this class also utilizes a smaller size of chunk in memory,
-    comparing to dict or tuple.
+    Besides the features for de-duplication, this class also utilizes a smaller size of chunk in memory.
     """
 
     def __init__(self, workflow_id, bundle_uuid=None):
@@ -52,6 +51,7 @@ class Queue_Handler(object):
     def __init__(self, config_object):
         self.workflow_queue = Queue(maxsize=0)  # use infinite for the size of the queue for now
         self.process = None
+        self.process_id = None
         self.last_submission = None
         self.settings = get_settings(config_object)
         self.cromwell_url = self.settings.get('cromwell_url')
@@ -64,6 +64,7 @@ class Queue_Handler(object):
     def spawn_and_run(self):
         if not self.process:
             self.process = Process(target=self.execution)
+            self.process_id = os.getpid()
         self.process.start()
 
     def join(self):
@@ -72,7 +73,7 @@ class Queue_Handler(object):
     def sleep_for(self, sleep_time):
         time.sleep(sleep_time)
 
-    def retrieve_queue(self, query_dict):
+    def retrieve_workflows(self, query_dict):
         """Retrieve the latest set of "On Hold" workflows from Cromwell and put them in the in-memory queue.
 
         Args:
@@ -92,34 +93,57 @@ class Queue_Handler(object):
             logger.warning('Queue | Failed to retrieve workflows from Cromwell | {0}'.format(datetime.now()))
             logger.info('Queue | {0} | {1}'.format(response.text, datetime.now()))
         else:
-            workflow_metas = response.json()['results']
+            return response.json()['results']
 
-            # TODO: This count-inconsistency issue has been fixed after Cromwell v34
-            results_count = response.json()['totalResultsCount']
-            workflow_num = results_count if results_count == len(workflow_metas) else len(workflow_metas)
+    def enqueue(self, workflow_metas):
+        """Put workflows into the in-memory queue.
 
-            logger.info('Queue | Retrieved {0} workflows from Cromwell. | {1}'.format(workflow_num, datetime.now()))
+        Args:
+            workflow_metas (list): A list of workflow metadata objects, e.g.
+            ```
+                [
+                    {
+                        "name": "WorkflowName1",
+                        "id": "xxx1",
+                        "submission": "2018-01-01T23:49:40.620Z",
+                        "status": "Succeeded",
+                        "end": "2018-07-12T00:37:12.282Z",
+                        "start": "2018-07-11T23:49:48.384Z"
+                    },
+                    {
+                        "name": "WorkflowName2",
+                        "id": "xxx2",
+                        "submission": "2018-01-01T23:49:42.171Z",
+                        "status": "Succeeded",
+                        "end": "2018-07-12T00:31:27.273Z",
+                        "start": "2018-07-11T23:49:48.385Z"
+                    }
+                ]
+            ```
+        """
+        workflow_num = len(workflow_metas)
 
-            if workflow_num:
-                # store the latest submission timestamp to save computation time for later updates
-                # TODO: from Cromwell v34 (https://github.com/broadinstitute/cromwell/releases/tag/34), Query results will
-                # be returned in reverse chronological order, with the most-recently submitted workflows returned first,
-                # the logic here need to be updated.
-                self.last_submission = workflow_metas[-1].get('submission')
+        logger.info('Queue | Retrieved {0} workflows from Cromwell. | {1}'.format(workflow_num, datetime.now()))
 
-                # placeholder for the de-duplication logic
-                for workflow_meta in workflow_metas:
+        if workflow_num:
+            if not self.is_workflow_list_in_oldest_first_order(workflow_metas):
+                workflow_metas = workflow_metas[::-1]
 
-                    workflow_id = workflow_meta.get('workflow_id')
-                    workflow_labels = workflow_meta.get('labels')  # TODO: Integrate this field into Workflow class
-                    workflow_bundle_uuid = workflow_labels.get('bundle-uuid') if isinstance(workflow_labels, dict) else None
+            self.last_submission = workflow_metas[-1].get(
+                'submission')  # store the latest submission timestamp to save computation time for later updates
 
-                    workflow = Workflow(workflow_id, workflow_bundle_uuid)
+            for workflow_meta in workflow_metas:
+                workflow_id = workflow_meta.get('workflow_id')
+                workflow_labels = workflow_meta.get('labels')  # TODO: Integrate this field into Workflow class
+                workflow_bundle_uuid = workflow_labels.get('bundle-uuid') if isinstance(workflow_labels, dict) else None
 
-                    logger.debug(
-                        'Queue | Enqueuing workflow {0} | {1}'.format(workflow, datetime.now()))
+                workflow = Workflow(workflow_id, workflow_bundle_uuid)
 
-                    self.workflow_queue.put(workflow)  # TODO: Implement and add de-duplication logic here
+                logger.debug(
+                    'Queue | Enqueuing workflow {0} | {1}'.format(workflow, datetime.now()))
+
+                self.workflow_queue.put(workflow)  # TODO: Implement and add de-duplication logic here
+
 
     def execution(self):
         logger.info(
@@ -129,11 +153,62 @@ class Queue_Handler(object):
             if self.last_submission:
                 # make sure it only queries the workflows submitted after the last retrieve, if applicable
                 self.cromwell_query_dict['submission'] = self.last_submission  # this is not a atomic manipulation!
-            self.retrieve_queue(self.cromwell_query_dict)
+
+            self.enqueue(
+                self.retrieve_workflows(self.cromwell_query_dict)
+            )
+
             self.sleep_for(self.settings.get('queue_update_interval'))
 
     @staticmethod
-    def shallow_deduplicate(ls):
+    def is_workflow_list_in_oldest_first_order(workflow_list):
+        """Placeholder.
+
+        From Cromwell v34 (https://github.com/broadinstitute/cromwell/releases/tag/34), Query results will
+        be returned in reverse chronological order, with the most-recently submitted workflows returned first,
+        the logic here need to be updated.
+
+        Args:
+            workflow_list (list): A list of workflow metadata objects, e.g.
+            ```
+                [
+                    {
+                        "name": "WorkflowName1",
+                        "id": "xxx1",
+                        "submission": "2018-01-01T23:49:40.620Z",
+                        "status": "Succeeded",
+                        "end": "2018-07-12T00:37:12.282Z",
+                        "start": "2018-07-11T23:49:48.384Z"
+                    },
+                    {
+                        "name": "WorkflowName2",
+                        "id": "xxx2",
+                        "submission": "2018-01-01T23:49:42.171Z",
+                        "status": "Succeeded",
+                        "end": "2018-07-12T00:31:27.273Z",
+                        "start": "2018-07-11T23:49:48.385Z"
+                    }
+                ]
+            ```
+
+        Returns:
+            bool: The return value. True if the workflow_list is sorted oldest first, False otherwise.
+        """
+        CROMWELL_DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
+        try:
+            head = datetime.strptime(str(workflow_list[0].get('submission')), CROMWELL_DATETIME_FORMAT)
+            tail = datetime.strptime(str(workflow_list[-1].get('submission')), CROMWELL_DATETIME_FORMAT)
+            if head <= tail:
+                return True
+        except ValueError:
+            logger.error(
+                'Queue | An error happened when try to parse the submission timestamps, will assume oldest first for'
+                ' the workflows returned from Cromwell | {0}'.format(datetime.now()))
+            return True
+        return False
+
+    @staticmethod
+    def shallow_deduplicate():
         """A placeholder function for de-duplication logic, not implemented yet.
 
         This shallow de-duplication should only search given bundle-uuid and bundle-version in the current domain,
@@ -142,7 +217,7 @@ class Queue_Handler(object):
         return NotImplemented
 
     @staticmethod
-    def deep_deduplicate(ls):
+    def deep_deduplicate():
         """A placeholder function for de-duplication logic, not implemented yet.
 
         This deep de-duplication should search the given bundle-uuid and bundle-version in the whole history.
