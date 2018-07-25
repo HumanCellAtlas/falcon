@@ -5,7 +5,7 @@ from datetime import datetime
 from multiprocessing import Process, Queue
 
 import cromwell_tools
-from utils import get_settings
+from settings import get_settings
 
 
 logging.basicConfig(level=logging.INFO)
