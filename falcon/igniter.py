@@ -72,6 +72,6 @@ class Igniter(object):
             self.sleep_for(self.workflow_start_interval)
 
     def execution(self, mem_queue_from_handler):
-        logger.info('Igniter | Initialing an igniter with process => {0} | {1}'.format(get_ident(), datetime.now()))
+        logger.info('Igniter | Initialing an igniter with thread => {0} | {1}'.format(get_ident(), datetime.now()))
         while True:
             self.start_workflow(mem_queue_from_handler)
