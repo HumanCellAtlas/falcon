@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 from datetime import datetime
 from multiprocessing import Process, Queue
@@ -61,10 +60,10 @@ class Queue_Handler(object):
             'includeSubworkflows': False
         }
 
-    def spawn_and_run(self):
+    def spawn_and_start(self):
         if not self.process:
             self.process = Process(target=self.execution)
-            self.process_id = os.getpid()
+            self.process_id = self.process.pid
         self.process.start()
 
     def join(self):
@@ -147,7 +146,7 @@ class Queue_Handler(object):
 
     def execution(self):
         logger.info(
-            'Queue | Initialing the queue handler with process => {0} | {1}'.format(os.getpid(), datetime.now()))
+            'Queue | Initialing the queue handler with process => {0} | {1}'.format(self.process_id, datetime.now()))
 
         while True:
             if self.last_submission:

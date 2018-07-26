@@ -1,6 +1,5 @@
 import logging
 import multiprocessing
-import os
 import queue
 import time
 from datetime import datetime
@@ -32,7 +31,7 @@ class Igniter(object):
 
         if not self.process:
             self.process = Process(target=self.execution, args=(mem_queue_from_handler,))
-            self.process_id = os.getpid()
+            self.process_id = self.process.pid
         self.process.start()
 
     def join(self):
@@ -72,7 +71,7 @@ class Igniter(object):
                         datetime.now()))
 
     def execution(self, mem_queue_from_handler):
-        logger.info('Igniter | Initialing an igniter with process => {0} | {1}'.format(os.getpid(), datetime.now()))
+        logger.info('Igniter | Initialing an igniter with process => {0} | {1}'.format(self.process_id, datetime.now()))
         while True:
             self.start_workflow(mem_queue_from_handler)
             self.sleep_for(self.settings.get('workflow_start_interval'))
