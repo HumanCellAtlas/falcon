@@ -1,0 +1,8 @@
+{
+  "cromwell_url": "https://example.cromwell-instance.org/api/workflows/v1",
+  "use_caas": false,
+  "cromwell_user": "username",
+  "cromwell_password": "password",
+  "queue_update_interval": 60,
+  "workflow_start_interval": "10"
+}
