@@ -3,4 +3,4 @@
 docker build -t falcon:test ../..
 
 # Run unit tests within docker container
-docker run --entrypoint pytest falcon:test
+docker run --entrypoint python3 falcon:test -m pytest

@@ -36,14 +36,15 @@ def query_workflows_fail_with_500(cromwell_url, query_dict, cromwell_user, cromw
     return response
 
 
-def query_workflows_simulation(cromwell_url, query_dict, cromwell_user, cromwell_password, caas_key):
-    system_random = random.SystemRandom
+def query_workflows(*args, **kwargs):
+    system_random = random.SystemRandom()
+    candidate_func_list = [query_workflows_succeed for i in range(10)]
+    candidate_func_list.append(query_workflows_fail_with_400)
+    candidate_func_list.append(query_workflows_fail_with_500)
     query_func = system_random.choice(
-        [query_workflows_succeed for i in range(10)]
-            .append(query_workflows_fail_with_400)
-            .append(query_workflows_fail_with_500)
+        candidate_func_list
     )  # Make the possibilities of getting the status codes 200:400:500 as 10:1:1 in the simulation
-    return query_func()
+    return query_func(*args, **kwargs)
 
 
 def release_workflow_succeed(cromwell_url, workflow_id, cromwell_user, cromwell_password, caas_key):
@@ -98,13 +99,14 @@ def release_workflow_with_500(cromwell_url, workflow_id, cromwell_user, cromwell
     return response
 
 
-def release_workflow_simulation(cromwell_url, workflow_id, cromwell_user, cromwell_password, caas_key):
-    system_random = random.SystemRandom
+def release_workflow(*args, **kwargs):
+    system_random = random.SystemRandom()
+    candidate_func_list = [release_workflow_succeed for i in range(10)]
+    candidate_func_list.append(release_workflow_with_400)
+    candidate_func_list.append(release_workflow_with_403)
+    candidate_func_list.append(release_workflow_with_404)
+    candidate_func_list.append(release_workflow_with_500)
     release_func = system_random.choice(
-        [release_workflow_succeed for i in range(10)]
-            .append(release_workflow_with_400)
-            .append(release_workflow_with_403)
-            .append(release_workflow_with_404)
-            .append(release_workflow_with_500)
+        candidate_func_list
     )  # Make the possibilities of getting the status codes 200:400:403:404:500 as 10:1:1:1:1 in the simulation
-    return release_func()
+    return release_func(*args, **kwargs)
