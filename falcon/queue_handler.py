@@ -1,15 +1,14 @@
 import logging
-import os
 import time
 from datetime import datetime
 from threading import Thread, Lock, get_ident
 from queue import Queue
 
-import cromwell_tools
-from settings import get_settings
+from cromwell_tools import cromwell_tools
+from falcon import settings
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger('falcon.{module_path}'.format(module_path=__name__))
 
 
@@ -42,13 +41,13 @@ class Queue_Handler(object):
     def __init__(self, config_object):
         self.workflow_queue = self.obtainQueue(-1)  # use infinite for the size of the queue for now
         self.thread = None
-        self.settings = get_settings(config_object)
+        self.settings = settings.get_settings(config_object)
         self.queue_update_interval = self.settings.get('queue_update_interval')
         self.cromwell_url = self.settings.get('cromwell_url')
         self.cromwell_query_dict = {
             'status': 'On Hold',
             'additionalQueryResultFields': 'labels',
-            'includeSubworkflows': False
+            'includeSubworkflows': 'false'  # TODO: should accept False, this is a bug in cromwell_tools, need fix there
         }
 
     def spawn_and_start(self):
@@ -57,7 +56,10 @@ class Queue_Handler(object):
         self.thread.start()
 
     def join(self):
-        self.thread.join()
+        try:
+            self.thread.join()
+        except (AttributeError, AssertionError):
+            logger.error('The thread of this queue handler is not in a running state.')
 
     @staticmethod
     def obtainQueue(max_queue_size=-1):
@@ -83,8 +85,8 @@ class Queue_Handler(object):
         )
 
         if response.status_code != 200:
-            logger.warning('Queue | Failed to retrieve workflows from Cromwell | {0}'.format(datetime.now()))
-            logger.info('Queue | {0} | {1}'.format(response.text, datetime.now()))
+            logger.warning('Queue | Failed to retrieve workflows from Cromwell | {0} | {1}'.format(response.text, datetime.now()))
+            return []
         else:
             return response.json()['results']
 
@@ -116,9 +118,11 @@ class Queue_Handler(object):
         """
         workflow_num = len(workflow_metas)
 
-        logger.info('Queue | Retrieved {0} workflows from Cromwell. | {1}'.format(workflow_num, datetime.now()))
-
         if workflow_num:
+            logger.debug('Queue | {0} | {1}'.format(workflow_metas, datetime.now()))  #TODO: remove this or not?
+
+            logger.info('Queue | Retrieved {0} workflows from Cromwell. | {1}'.format(workflow_num, datetime.now()))
+
             if not self.is_workflow_list_in_oldest_first_order(workflow_metas):
                 workflow_metas = workflow_metas[::-1]
 
@@ -129,7 +133,7 @@ class Queue_Handler(object):
             self.workflow_queue = self.obtainQueue(-1)
 
             for workflow_meta in workflow_metas:
-                workflow_id = workflow_meta.get('workflow_id')
+                workflow_id = workflow_meta.get('id')
                 workflow_labels = workflow_meta.get('labels')  # TODO: Integrate this field into Workflow class
                 workflow_bundle_uuid = workflow_labels.get('bundle-uuid') if isinstance(workflow_labels, dict) else None
 
@@ -139,6 +143,10 @@ class Queue_Handler(object):
                     'Queue | Enqueuing workflow {0} | {1}'.format(workflow, datetime.now()))
 
                 self.workflow_queue.put(workflow)  # TODO: Implement and add de-duplication logic here
+        else:
+            logger.info(
+                'Queue | Cannot fetch any workflow from Cromwell, go back to sleep and wait for next attempt. | {0}'.format(
+                    datetime.now()))
 
     def execution(self):
         logger.info(
