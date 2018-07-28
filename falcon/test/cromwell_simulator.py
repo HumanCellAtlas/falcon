@@ -11,7 +11,7 @@ def query_workflows_succeed(cromwell_url, query_dict, cromwell_user, cromwell_pa
     response.json.return_value = {
         'results': [
             {
-                'workflow_id': str(uuid4()), 'submission': '2018-05-25T19:03:51.736Z'
+                'id': str(uuid4()), 'submission': '2018-05-25T19:03:51.736Z'
             } for i in range(random.randint(1, 10))
         ]
     }

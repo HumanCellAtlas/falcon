@@ -1,12 +1,12 @@
 import logging
 from threading import Thread, get_ident
-import os
 import queue
 import time
 from datetime import datetime
 
-import cromwell_tools
-from . import settings
+from cromwell_tools import cromwell_tools
+from falcon import queue_handler
+from falcon import settings
 
 
 logging.basicConfig(level=logging.INFO)
@@ -25,12 +25,12 @@ class Igniter(object):
         self.cromwell_url = self.settings.get('cromwell_url')
         self.workflow_start_interval = self.settings.get('workflow_start_interval')
 
-    def spawn_and_start(self, mem_queue_from_handler):
-        if not isinstance(mem_queue_from_handler, queue.Queue):
-            raise TypeError('Igniter has to get a shared Queue object from Queue_Handler to start!')
+    def spawn_and_start(self, handler):
+        if not isinstance(handler, queue_handler.Queue_Handler):
+            raise TypeError('Igniter has to access to an instance of the Queue_Handler to start!')
 
         if not self.thread:
-            self.thread = Thread(target=self.execution, args=(mem_queue_from_handler,))
+            self.thread = Thread(target=self.execution, args=(handler,))
         self.thread.start()
 
     def join(self):
@@ -54,12 +54,11 @@ class Igniter(object):
                 caas_key=self.settings.get('caas_key')
             )
             if response.status_code != 200:
-                logger.warning('Igniter | Failed to start a workflow {0} | {1}'.format(workflow, datetime.now()))
-                logger.info('Igniter | {0} | {1}'.format(response.text, datetime.now()))
-
                 if response.status_code == 403:
-                    logger.warning('Igniter | Skip sleeping to avoid idle time | {0}'.format(workflow, datetime.now()))
+                    logger.warning('Igniter | Failed to start a workflow {0} | {1} | Skip sleeping to avoid idle time | {2}'.format(workflow, response.text, datetime.now()))
                 else:
+                    logger.warning(
+                        'Igniter | Failed to start a workflow {0} | {1} | {2}'.format(workflow, response.text, datetime.now()))
                     self.sleep_for(self.workflow_start_interval)
             else:
                 logger.info('Igniter | Ignited a workflow {0} | {1}'.format(workflow, datetime.now()))
@@ -67,11 +66,11 @@ class Igniter(object):
 
         except queue.Empty:
             logger.info(
-                'Igniter | The in-memory queue is empty, wait for the handler to retrieve workflow before next check-in. | {}'.format(
+                'Igniter | The in-memory queue is empty, waiting for the handler to retrieve workflows. | {0}'.format(
                     datetime.now()))
             self.sleep_for(self.workflow_start_interval)
 
-    def execution(self, mem_queue_from_handler):
+    def execution(self, handler):
         logger.info('Igniter | Initialing an igniter with thread => {0} | {1}'.format(get_ident(), datetime.now()))
         while True:
-            self.start_workflow(mem_queue_from_handler)
+            self.start_workflow(handler.workflow_queue)
