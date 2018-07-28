@@ -5,7 +5,7 @@ from threading import Thread, Lock, get_ident
 from queue import Queue
 
 import cromwell_tools
-from settings import get_settings
+from . import settings
 
 
 logging.basicConfig(level=logging.INFO)
@@ -41,7 +41,7 @@ class Queue_Handler(object):
     def __init__(self, config_object):
         self.workflow_queue = self.obtainQueue(-1)  # use infinite for the size of the queue for now
         self.thread = None
-        self.settings = get_settings(config_object)
+        self.settings = settings.get_settings(config_object)
         self.queue_update_interval = self.settings.get('queue_update_interval')
         self.cromwell_url = self.settings.get('cromwell_url')
         self.cromwell_query_dict = {
@@ -56,7 +56,10 @@ class Queue_Handler(object):
         self.thread.start()
 
     def join(self):
-        self.thread.join()
+        try:
+            self.thread.join()
+        except (AttributeError, AssertionError):
+            logger.error('The thread of this queue handler is not in a running state.')
 
     @staticmethod
     def obtainQueue(max_queue_size=-1):
