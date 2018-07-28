@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 
 import cromwell_tools
-from settings import get_settings
+from . import settings
 
 
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +21,7 @@ class Igniter(object):
             config_path (str): Path to the config.json file.
         """
         self.thread = None
-        self.settings = get_settings(config_path)
+        self.settings = settings.get_settings(config_path)
         self.cromwell_url = self.settings.get('cromwell_url')
         self.workflow_start_interval = self.settings.get('workflow_start_interval')
 
@@ -36,7 +36,7 @@ class Igniter(object):
     def join(self):
         try:
             self.thread.join()
-        except AssertionError:
+        except (AttributeError, AssertionError):
             logger.error('The thread of this igniter is not in a running state.')
 
     @staticmethod

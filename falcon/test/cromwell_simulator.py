@@ -1,3 +1,4 @@
+import json
 from unittest.mock import Mock
 from requests.models import Response
 from uuid import uuid4
@@ -24,13 +25,14 @@ def query_workflows_fail_with_400(cromwell_url, query_dict, cromwell_user, cromw
         'status': 'fail',
         'message': 'An error message for Malformed Request.'
     }
+    response.text = json.dumps(response.json.return_value)
     return response
 
 
 def query_workflows_fail_with_500(cromwell_url, query_dict, cromwell_user, cromwell_password, caas_key):
     response = Mock(spec=Response)
     response.status_code = 500
-    response.text.return_value = 'An error message for Internal Server Error.'
+    response.text = 'An error message for Internal Server Error.'
     return response
 
 
@@ -48,6 +50,7 @@ def release_workflow_succeed(cromwell_url, workflow_id, cromwell_user, cromwell_
     response = Mock(spec=Response)
     response.status_code = 200
     response.json.return_value = { "id": workflow_id, "status": "Submitted" }
+    response.text = json.dumps(response.json.return_value)
     return response
 
 
@@ -59,17 +62,19 @@ def release_workflow_with_400(cromwell_url, workflow_id, cromwell_user, cromwell
         'status': 'fail',
         'message': 'An error message for Malformed Request.'
     }
+    response.text = json.dumps(response.json.return_value)
     return response
 
 
 def release_workflow_with_403(cromwell_url, workflow_id, cromwell_user, cromwell_password, caas_key):
     response = Mock(spec=Response)
-    response.status_code = 200
+    response.status_code = 403
     response.json.return_value = {
         'status': 'error',
         'message': 'Couldn\'t change status of workflow {} to \'Submitted\' because the workflow'
                    ' is not in \'On Hold\' state'.format(workflow_id)
     }
+    response.text = json.dumps(response.json.return_value)
     return response
 
 
@@ -82,13 +87,14 @@ def release_workflow_with_404(cromwell_url, workflow_id, cromwell_user, cromwell
       'status': 'fail',
       'message': 'Unrecognized workflow ID: {}'.format(workflow_id)
     }
+    response.text = json.dumps(response.json.return_value)
     return response
 
 
 def release_workflow_with_500(cromwell_url, workflow_id, cromwell_user, cromwell_password, caas_key):
     response = Mock(spec=Response)
     response.status_code = 500
-    response.text.return_value = 'An error message for Internal Server Error.'
+    response.text = 'An error message for Internal Server Error.'
     return response
 
 
