@@ -9,4 +9,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-ENTRYPOINT ["python", "-u", "falcon/__main__.py"]
+ENTRYPOINT ["python", "-um", "falcon.__main__"]
