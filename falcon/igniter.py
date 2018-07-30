@@ -26,8 +26,8 @@ class Igniter(object):
         self.workflow_start_interval = self.settings.get('workflow_start_interval')
 
     def spawn_and_start(self, handler):
-        if not isinstance(handler, queue_handler.Queue_Handler):
-            raise TypeError('Igniter has to access to an instance of the Queue_Handler to start!')
+        if not isinstance(handler, queue_handler.QueueHandler):
+            raise TypeError('Igniter has to access to an instance of the QueueHandler to start!')
 
         if not self.thread:
             self.thread = Thread(target=self.execution, args=(handler,))
