@@ -82,7 +82,7 @@ class TestIgniter(object):
         The `@patch` here mocks the `settings.get_settings()` with `mock_get_settings()` to make sure the instantiation
         of `Igniter` succeeds.
 
-        The `@patch.object` here mocks the `igniter.execution()` instance mehtod with `mock_igniter_execution()` to
+        The `@patch.object` here mocks the `igniter.execution()` instance method with `mock_igniter_execution()` to
         avoid executing the actual while loop in `igniter.execution()` during the unittest.
 
         Testing Logic: pass a mocked instance of `queue_handler.Queue_Handler` into the `spawn_and_start()`, expect
@@ -135,7 +135,7 @@ class TestIgniter(object):
 
         `caplog` is a fixture of provided by Pytest, which captures all logging streams during the test.
 
-        Testing Logic: create a inactive thread within `test_igniter`, and call `igniter.join()`, expect a specific
+        Testing Logic: create an inactive thread within `test_igniter`, and call `igniter.join()`, expect a specific
         logging error appears to the logging stream.
         """
         caplog.set_level(logging.ERROR)
