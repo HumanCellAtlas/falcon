@@ -29,13 +29,18 @@ class Workflow(object):
         return str(self.id)
 
     def __eq__(self, other):
+        """
+        Note: In the future, if we want to add advanced de-duplication feature to the service, besides assert workflow id
+        betweeen 2 Workflow objects, we might also want to check if they have the same bundle_uuid and bundle_version.
+        """
         if isinstance(other, Workflow):
             return self.id == other.id
         return False
 
 
 class Queue_Handler(object):
-    """A concrete queue handler.
+    """
+    A concrete queue handler.
     """
 
     def __init__(self, config_object):
@@ -47,7 +52,7 @@ class Queue_Handler(object):
         self.cromwell_query_dict = {
             'status': 'On Hold',
             'additionalQueryResultFields': 'labels',
-            'includeSubworkflows': 'false'  # TODO: should accept False, this is a bug in cromwell_tools, need fix there
+            'includeSubworkflows': 'false'  # TODO: should accept False, this is a bug in cromwell_tools, need a fix there
         }
 
     def spawn_and_start(self):
@@ -63,7 +68,16 @@ class Queue_Handler(object):
 
     @staticmethod
     def obtainQueue(max_queue_size=-1):
-        return Queue(maxsize=max_queue_size)
+        """Returns a Queue object, override this function to make handler support polymorphism.
+        
+        Args:
+            max_queue_size(int): The maximal size of the returned queue object. By default the number is -1 
+            which indicateds infinite size.
+
+        Returns:
+            `queue.Queue`: A valid `queue.Queue` object with the desired max size.
+        """
+        return Queue(maxsize=int(max_queue_size))
 
     def sleep_for(self, sleep_time):
         time.sleep(sleep_time)
@@ -73,7 +87,7 @@ class Queue_Handler(object):
 
         Args:
             query_dict (dict): A dictionary that contains valid query parameters which can be accepted by the Cromwell
-            /query  endpoint.
+            `/query`  endpoint.
         """
         # workflows should be a list that ordered by submission time, oldest first, not true anymore after Cromwell v34
         response = cromwell_tools.query_workflows(
