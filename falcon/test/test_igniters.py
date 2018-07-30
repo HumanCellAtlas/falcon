@@ -11,7 +11,6 @@ from falcon import igniter
 from falcon import queue_handler
 
 
-
 def mock_get_settings(path):
     """
     This function mocks the `get_settings()` function, returns a valid dictionary to be consumed.
@@ -67,7 +66,8 @@ class TestIgniter(object):
         Testing Logic: pass an object which is not an instance of `queue_handler.Queue_Handler` into the
         `spawn_and_start()`, expect a `TypeError`.
         """
-        not_a_real_queue_handler = type('fake_handler', (object,), {'method': lambda self: print('')})()
+        not_a_real_queue_handler = type('fake_handler', (object,), {
+                                        'method': lambda self: print('')})()
 
         with pytest.raises(TypeError):
             test_igniter = igniter.Igniter('mock_path')
@@ -95,7 +95,8 @@ class TestIgniter(object):
         test_igniter = igniter.Igniter('mock_path')
         try:
             test_igniter.spawn_and_start(mock_handler)
-            mock_igniter_execution.assert_called_once_with(test_igniter, mock_handler)
+            mock_igniter_execution.assert_called_once_with(
+                test_igniter, mock_handler)
         finally:
             test_igniter.thread.join()
 
@@ -231,7 +232,6 @@ class TestIgniter(object):
         assert 'Failed to start a workflow fake_workflow_id' in warn
         assert 'Skip sleeping to avoid idle time' in warn
         assert elapsed < test_igniter.workflow_start_interval
-
 
     @patch('falcon.igniter.settings.get_settings', mock_get_settings)
     @patch('falcon.igniter.cromwell_tools.release_workflow', cromwell_simulator.release_workflow_with_404, create=True)
