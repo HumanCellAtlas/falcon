@@ -2,6 +2,7 @@ import logging
 import timeit
 from unittest import mock
 from unittest.mock import patch
+from queue import Queue
 
 import pytest
 
@@ -21,6 +22,28 @@ def mock_get_settings(path):
         'queue_update_interval': 60,
         'workflow_start_interval': 10
     }
+
+
+def mock_workflow_generator():
+    """
+    This function generates a mocked `queue_handler.Workflow` object, it has the right type, fake (workflow) `id` and
+    fake `bundle_uuid`; it also implements the exact same `__repr__()` as `Workflow` object does.
+    """
+    mock_workflow = mock.MagicMock(spec=queue_handler.Workflow)
+    mock_workflow.id = 'fake_workflow_id'
+    mock_workflow.bundle_uuid = 'fake_bundle_uuid'
+    mock_workflow.__repr__ = mock.Mock()
+    mock_workflow.__repr__.return_value = mock_workflow.id
+    return mock_workflow
+
+
+def mock_queue_handler_execution(self):
+    """
+    This function mocks the `igniter.execution()` instance method, it doesn't have any functionality.
+    The motivation of mocking this is to avoid executing the actual while loop in `queue_handler.execution()`
+     during the unittest.
+    """
+    return True
 
 
 class TestWorkflow(object):
@@ -63,10 +86,41 @@ class TestQueue_Handler(object):
     """
 
     def test_obtain_queue_returns_a_valid_queue_object(self):
-        pass
+        q = queue_handler.Queue_Handler.obtainQueue()
+        assert isinstance(q, Queue)
 
     def test_queue_handler_can_spawn_and_start_properly(self):
+        test_handler = 
+
+    def test_sleep_for_can_pause_for_at_least_given_duration(self):
         pass
+
+    def test_queue_handler_join_can_handle_exception(self, caplog):
+        pass
+
+    def test_is_workflow_list_in_oldest_first_order_function_works_properly_on_oldest_first_workflow_list(self):
+        pass
+
+    def test_is_workflow_list_in_oldest_first_order_function_works_properly_on_newest_first_workflow_list(self):
+        pass
+
+    def test_retrieve_workflows_returns_query_results_successfully(self):
+        pass
+
+    def test_retrieve_workflows_returns_empty_list_on_exceptions(self):
+        pass
+
+    def test_enqueue_indeed_rebuilds_a_new_workflow_queue_and_changes_the_reference_pointer_properly(self):
+        pass
+
+    def test_enqueue_can_put_a_workflow_object_to_the_new_workflow_queue(self):
+        pass
+
+    def test_enqueue_goes_back_to_sleep_when_no_workflow_is_retrieved(self):
+        pass
+
+
+
 
         
 
