@@ -1,7 +1,7 @@
 import logging
 import time
 from datetime import datetime
-from threading import Thread, Lock, get_ident
+from threading import Thread, get_ident
 from queue import Queue
 
 from cromwell_tools import cromwell_tools
@@ -18,9 +18,10 @@ class Workflow(object):
     Besides the features for de-duplication, this class also utilizes a smaller size of chunk in memory.
     """
 
-    def __init__(self, workflow_id, bundle_uuid=None):
+    def __init__(self, workflow_id, bundle_uuid=None, bundle_version=None):
         self.id = workflow_id
         self.bundle_uuid = bundle_uuid
+        self.bundle_version = bundle_version
 
     def __str__(self):
         return str(self.id)
@@ -29,13 +30,19 @@ class Workflow(object):
         return str(self.id)
 
     def __eq__(self, other):
+        """
+        Note: In the future, if we want to add advanced de-duplication feature to the service, besides asserting
+        workflow id between 2 `Workflow` objects, we might also want to check if they have the same `bundle_uuid`
+        and `bundle_version`.
+        """
         if isinstance(other, Workflow):
             return self.id == other.id
         return False
 
 
-class Queue_Handler(object):
-    """A concrete queue handler.
+class QueueHandler(object):
+    """
+    A concrete queue handler.
     """
 
     def __init__(self, config_object):
@@ -116,12 +123,12 @@ class Queue_Handler(object):
                 ]
             ```
         """
-        workflow_num = len(workflow_metas)
+        num_workflows = len(workflow_metas)
 
-        if workflow_num:
+        if num_workflows:
             logger.debug('Queue | {0} | {1}'.format(workflow_metas, datetime.now()))  #TODO: remove this or not?
 
-            logger.info('Queue | Retrieved {0} workflows from Cromwell. | {1}'.format(workflow_num, datetime.now()))
+            logger.info('Queue | Retrieved {0} workflows from Cromwell. | {1}'.format(num_workflows, datetime.now()))
 
             if not self.is_workflow_list_in_oldest_first_order(workflow_metas):
                 workflow_metas = workflow_metas[::-1]
@@ -150,7 +157,7 @@ class Queue_Handler(object):
 
     def execution(self):
         logger.info(
-            'Queue | Initialing the queue handler with thread => {0} | {1}'.format(get_ident(), datetime.now()))
+            'Queue | Initializing the queue handler with thread => {0} | {1}'.format(get_ident(), datetime.now()))
 
         while True:
             self.enqueue(
