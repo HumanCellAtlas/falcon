@@ -42,7 +42,21 @@ class Workflow(object):
 
 class QueueHandler(object):
     """
-    A concrete queue handler class.
+    This is the queue handler component of the falcon.
+
+    This handler is responsible for retrieving `On Hold` workflows from Cromwell, maintaining a queue instance and
+    put the workflows into the queue for igniter to consume.
+
+    Args:
+        workflow_queue (queue.Queue): A queue object within the handler instance to host workflows.
+        thread (threading.Thread): A thread within the handler instance to execute the logic. By default it's set to
+            None. It should only be spawned by the function `spawn_and_start()`.
+        settings (dict): A dictionary contains all settings for the handler.
+        queue_update_interval (int): This is the how long the handler will sleep for after each time it retrieves
+            workflows from the Cromwell.
+        cromwell_url (str): This is the Cromwell url loaded from the settings.
+        cromwell_query_dict (dict): This is the query dictionary handler uses for retrieving workflows from the
+            Cromwell. Currently this is hard-coded.
     """
 
     def __init__(self, config_object):
@@ -53,8 +67,7 @@ class QueueHandler(object):
         self.cromwell_url = self.settings.get('cromwell_url')
         self.cromwell_query_dict = {
             'status': 'On Hold',
-            'additionalQueryResultFields': 'labels',
-            'includeSubworkflows': 'false'  # TODO: should accept False, this is a bug in cromwell_tools, need fix there
+            # 'additionalQueryResultFields': 'labels',  # TODO: uncomment this line when we need to de-dup workflows
         }
 
     def spawn_and_start(self):
