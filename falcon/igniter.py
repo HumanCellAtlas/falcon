@@ -26,8 +26,8 @@ class Igniter(object):
         self.workflow_start_interval = self.settings.get('workflow_start_interval')
 
     def spawn_and_start(self, handler):
-        if not isinstance(handler, queue_handler.Queue_Handler):
-            raise TypeError('Igniter has to access to an instance of the Queue_Handler to start!')
+        if not isinstance(handler, queue_handler.QueueHandler):
+            raise TypeError('Igniter has to access to an instance of the QueueHandler to start!')
 
         if not self.thread:
             self.thread = Thread(target=self.execution, args=(handler,))
@@ -43,8 +43,8 @@ class Igniter(object):
     def sleep_for(sleep_time):
         time.sleep(sleep_time)
 
-    def start_workflow(self, mem_queue):
-        try:  # this isn't necessary since it's checking with mem_queue.empty()
+    def release_workflow(self, mem_queue):
+        try:
             workflow = mem_queue.get(block=False)
             response = cromwell_tools.release_workflow(
                 cromwell_url=self.cromwell_url,
@@ -54,23 +54,18 @@ class Igniter(object):
                 caas_key=self.settings.get('caas_key')
             )
             if response.status_code != 200:
-                if response.status_code == 403:
-                    logger.warning('Igniter | Failed to start a workflow {0} | {1} | Skip sleeping to avoid idle time | {2}'.format(workflow, response.text, datetime.now()))
-                else:
-                    logger.warning(
-                        'Igniter | Failed to start a workflow {0} | {1} | {2}'.format(workflow, response.text, datetime.now()))
-                    self.sleep_for(self.workflow_start_interval)
+                logger.warning(
+                    'Igniter | Failed to release a workflow {0} | {1} | {2}'.format(workflow, response.text, datetime.now()))
             else:
-                logger.info('Igniter | Ignited a workflow {0} | {1}'.format(workflow, datetime.now()))
-                self.sleep_for(self.workflow_start_interval)
-
+                logger.info('Igniter | Released a workflow {0} | {1}'.format(workflow, datetime.now()))
         except queue.Empty:
             logger.info(
                 'Igniter | The in-memory queue is empty, waiting for the handler to retrieve workflows. | {0}'.format(
                     datetime.now()))
+        finally:
             self.sleep_for(self.workflow_start_interval)
 
     def execution(self, handler):
-        logger.info('Igniter | Initialing an igniter with thread => {0} | {1}'.format(get_ident(), datetime.now()))
+        logger.info('Igniter | Initializing an igniter with thread => {0} | {1}'.format(get_ident(), datetime.now()))
         while True:
-            self.start_workflow(handler.workflow_queue)
+            self.release_workflow(handler.workflow_queue)
