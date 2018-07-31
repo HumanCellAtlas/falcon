@@ -171,13 +171,13 @@ class QueueHandler(object):
             logger.debug('Queue | Enqueuing workflow {0} | {1}'.format(workflow, datetime.now()))
             self.workflow_queue.put(workflow)  # TODO: Implement and add de-duplication logic here
 
-    def rebuild_queue(self, queue):
+    def set_queue(self, queue):
         """
         Move the reference from the old queue to the new object to maintain the pointer integrity for the instance
         variable `self.workflow_queue`. Make this a separate function so it's easier to test.
 
         Args:
-            queue: A concrete queue object which will replace queue that is currently referred by the handler.
+            queue: A reference to a new concrete queue object which will replace the current one.
         """
         self.workflow_queue = queue
 
@@ -190,7 +190,8 @@ class QueueHandler(object):
             if workflow_metas:  # This could happen when getting either non-200 codes or 0 workflow from Cromwell
                 workflows = self.prepare_workflows(workflow_metas)
 
-                self.rebuild_queue(self.create_empty_queue(-1))  # This must happen before `enqueue()` is called!
+                self.set_queue(self.create_empty_queue(-1))  # This must happen before `enqueue()` is called!
+
                 self.enqueue(workflows)
             else:
                 logger.info(
@@ -284,14 +285,12 @@ class QueueHandler(object):
         try:
             head = datetime.strptime(str(workflow_list[0].get('submission')), CROMWELL_DATETIME_FORMAT)
             tail = datetime.strptime(str(workflow_list[-1].get('submission')), CROMWELL_DATETIME_FORMAT)
-            if head <= tail:
-                return True
+            return head <= tail
         except ValueError:
             logger.error(
                 'Queue | An error happened when try to parse the submission timestamps, will assume oldest first for'
                 ' the workflows returned from Cromwell | {0}'.format(datetime.now()))
             return True
-        return False
 
     @staticmethod
     def sleep_for(sleep_time):
