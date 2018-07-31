@@ -35,7 +35,7 @@ def mock_queue_handler_execution(self):
 
 def mock_queue_handler_retrieve_workflows(self, query_dict):
     """
-    This function mocks the `queue_handler.Queue_Handler.retrieve_workflows()` in successful situations,
+    This function mocks the `queue_handler.QueueHandler.retrieve_workflows()` in successful situations,
     it always returns a fixed list of workflow query results as for testing purposes.
     """
     results = [
@@ -82,7 +82,7 @@ def mock_queue_handler_retrieve_workflows(self, query_dict):
 @mock.create_autospec
 def mock_queue_handler_retrieve_no_workflow(self, query_dict):
     """
-    This function mocks the `queue_handler.Queue_Handler.retrieve_workflows()` in failed situations,
+    This function mocks the `queue_handler.QueueHandler.retrieve_workflows()` in failed situations,
     it always returns an empty list as the query result for testing purposes.
     """
     results = []
@@ -124,35 +124,36 @@ class TestWorkflow(object):
         assert test_workflow1 != test_workflow2
 
 
-class TestQueue_Handler(object):
+class QueueHandler(object):
     """
-    This class hosts all unittest cases for testing the `queue_handler.Queue_Handler` and its methods.
+    This class hosts all unittest cases for testing the `queue_handler.QueueHandler` and its methods.
     """
 
-    def test_obtain_queue_returns_a_valid_queue_object(self):
+    def test_create_empty_queue_returns_a_valid_empty_queue_object(self):
         """
-        This function asserts the `queue_handler.obtainQueue()` returns a valid `queue.Queue` object.
+        This function asserts the `queue_handler.create_empty_queue()` returns a valid `queue.Queue` object and it is empty.
         """
-        q = queue_handler.Queue_Handler.obtainQueue()
+        q = queue_handler.QueueHandler.create_empty_queue()
         assert isinstance(q, Queue)
+        assert q.empty() is True
 
     @patch('falcon.queue_handler.settings.get_settings', mock_get_settings)
-    @patch.object(queue_handler.Queue_Handler, 'execution', new=mock_queue_handler_execution)
+    @patch.object(queue_handler.QueueHandler, 'execution', new=mock_queue_handler_execution)
     def test_queue_handler_can_spawn_and_start_properly(self):
         """
         This function asserts the `queue_handler.spawn_and_start()` can be executed properly.
 
         The `@patch` here mocks the `settings.get_settings()` with `mock_get_settings()` to make sure the
-        instantiation of `Queue_Handler` succeeds.
+        instantiation of `QueueHandler` succeeds.
 
         The `@patch.object` here mocks the `queue_handler.execution()` instance method with
         `mock_queue_handler_execution()` to avoid executing the actual while loop in `queue_handler.execution()`
         during the unittest.
 
-        Testing Logic: pass a mocked instance of `queue_handler.Queue_Handler` into the `spawn_and_start()`, expect
+        Testing Logic: pass a mocked instance of `queue_handler.QueueHandler` into the `spawn_and_start()`, expect
         the `mock_queue_handler_execution()` to be called once with the mocked instance.
         """
-        test_handler = queue_handler.Queue_Handler('mock_path')
+        test_handler = queue_handler.QueueHandler('mock_path')
         try:
             test_handler.spawn_and_start()
             mock_queue_handler_execution.assert_called_once_with(test_handler)
@@ -165,14 +166,14 @@ class TestQueue_Handler(object):
         This function asserts the `queue_handler.sleep_for()` pauses the thread for at least a given duration.
 
         The `@patch` here mocks the `settings.get_settings()` with `mock_get_settings()` to make sure the instantiation
-        of `Queue_Handler` succeeds.
+        of `QueueHandler` succeeds.
 
-        Testing Logic: instantiate a `Queue_Handler`, defines a const sleep time `test_sleep_time` and pass it into the
+        Testing Logic: instantiate a `QueueHandler`, defines a const sleep time `test_sleep_time` and pass it into the
         `queue_handler.sleep_for()` and count the execution time. Expect
         `test_sleep_time <= elapsed <= test_sleep_time * 1.5` which means the `queue_handler.sleep_for()` can sleep
         for at least `test_sleep_time` and will wake up no later than `test_sleep_time * 1.5`.
         """
-        test_handler = queue_handler.Queue_Handler('mock_path')
+        test_handler = queue_handler.QueueHandler('mock_path')
         test_sleep_time = 1
 
         start = timeit.default_timer()
@@ -190,7 +191,7 @@ class TestQueue_Handler(object):
         `threading.Thread.join()`.
 
         The `@patch` here mocks the `settings.get_settings()` with `mock_get_settings()` to make sure the instantiation
-        of `Queue_Handler` succeeds.
+        of `QueueHandler` succeeds.
 
         `caplog` is a fixture of provided by Pytest, which captures all logging streams during the test.
 
@@ -198,7 +199,7 @@ class TestQueue_Handler(object):
         specific logging error appears to the logging stream.
         """
         caplog.set_level(logging.ERROR)
-        test_handler = queue_handler.Queue_Handler('mock_path')
+        test_handler = queue_handler.QueueHandler('mock_path')
 
         assert test_handler.thread is None
 
@@ -233,7 +234,7 @@ class TestQueue_Handler(object):
             }
         ]
 
-        assert queue_handler.Queue_Handler.is_workflow_list_in_oldest_first_order(
+        assert queue_handler.QueueHandler.is_workflow_list_in_oldest_first_order(
             oldest_first_workflow_list
         ) is True
 
@@ -263,7 +264,7 @@ class TestQueue_Handler(object):
             }
         ]
 
-        assert queue_handler.Queue_Handler.is_workflow_list_in_oldest_first_order(
+        assert queue_handler.QueueHandler.is_workflow_list_in_oldest_first_order(
             newest_first_workflow_list
         ) is False
 
@@ -275,7 +276,7 @@ class TestQueue_Handler(object):
         the Cromwell.
 
         The first `@patch` here mocks the `settings.get_settings()` with `mock_get_settings()` to make sure the
-        instantiation of `Queue_Handler` succeeds.
+        instantiation of `QueueHandler` succeeds.
 
         The second `@patch` here monkey patches the `cromwell_tools.query_workflows()` with the
         `cromwell_simulator.query_workflows_succeed`, so that we can test the handler without actually talking to
@@ -287,7 +288,7 @@ class TestQueue_Handler(object):
         make sure it can get 200 OK by using monkey-patched `cromwell_tools.query_workflows()`. Expect the returned
         result is a list and it's not empty.
         """
-        test_handler = queue_handler.Queue_Handler('mock_path')
+        test_handler = queue_handler.QueueHandler('mock_path')
         results = test_handler.retrieve_workflows(test_handler.cromwell_query_dict)
 
         assert isinstance(results, list)
@@ -302,7 +303,7 @@ class TestQueue_Handler(object):
         the Cromwell.
 
         The first `@patch` here mocks the `settings.get_settings()` with `mock_get_settings()` to make sure the
-        instantiation of `Queue_Handler` succeeds.
+        instantiation of `QueueHandler` succeeds.
 
         The second `@patch` here monkey patches the `cromwell_tools.query_workflows()` with the
         `cromwell_simulator.query_workflows_fail_with_500`, so that we can test the handler without actually talking to
@@ -316,7 +317,7 @@ class TestQueue_Handler(object):
         stream.
         """
         caplog.set_level(logging.WARNING)
-        test_handler = queue_handler.Queue_Handler('mock_path')
+        test_handler = queue_handler.QueueHandler('mock_path')
         results = test_handler.retrieve_workflows(test_handler.cromwell_query_dict)
 
         warn = caplog.text
@@ -332,7 +333,7 @@ class TestQueue_Handler(object):
         to the queue when it retrieves at least one workflow from the cromwell.
 
         The first `@patch` here mocks the `settings.get_settings()` with `mock_get_settings()` to make sure the
-        instantiation of `Queue_Handler` succeeds.
+        instantiation of `QueueHandler` succeeds.
 
         `caplog` is a fixture of provided by Pytest, which captures all logging streams during the test.
 
@@ -345,7 +346,7 @@ class TestQueue_Handler(object):
         the logging stream.
         """
         caplog.set_level(logging.INFO)
-        test_handler = queue_handler.Queue_Handler('mock_path')
+        test_handler = queue_handler.QueueHandler('mock_path')
         initial_queue_id = id(test_handler.workflow_queue)
         mock_results = mock_queue_handler_retrieve_workflows(test_handler, test_handler.cromwell_query_dict)
         mock_counts = len(mock_results)
@@ -367,7 +368,7 @@ class TestQueue_Handler(object):
         when it retrieves at least one workflow from the cromwell.
 
         The first `@patch` here mocks the `settings.get_settings()` with `mock_get_settings()` to make sure the
-        instantiation of `Queue_Handler` succeeds.
+        instantiation of `QueueHandler` succeeds.
 
         `caplog` is a fixture of provided by Pytest, which captures all logging streams during the test.
 
@@ -377,7 +378,7 @@ class TestQueue_Handler(object):
         `Queue.get()` 3 times to check if the objects in the queue are actually the `Workflow` objects we want.
         """
         caplog.set_level(logging.DEBUG)
-        test_handler = queue_handler.Queue_Handler('mock_path')
+        test_handler = queue_handler.QueueHandler('mock_path')
         mock_results = mock_queue_handler_retrieve_workflows(test_handler, test_handler.cromwell_query_dict)
 
         test_handler.enqueue(mock_results)
@@ -405,7 +406,7 @@ class TestQueue_Handler(object):
         enqueuing when it retrieves no workflow from the cromwell.
 
         The first `@patch` here mocks the `settings.get_settings()` with `mock_get_settings()` to make sure the
-        instantiation of `Queue_Handler` succeeds.
+        instantiation of `QueueHandler` succeeds.
 
         `caplog` is a fixture of provided by Pytest, which captures all logging streams during the test.
 
@@ -417,7 +418,7 @@ class TestQueue_Handler(object):
         object remains in the memory. Also expect a specific logging info appears to the logging stream.
         """
         caplog.set_level(logging.INFO)
-        test_handler = queue_handler.Queue_Handler('mock_path')
+        test_handler = queue_handler.QueueHandler('mock_path')
         initial_queue_id = id(test_handler.workflow_queue)
         mock_results = mock_queue_handler_retrieve_no_workflow(test_handler, test_handler.cromwell_query_dict)
 
