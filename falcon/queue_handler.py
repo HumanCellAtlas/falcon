@@ -248,11 +248,11 @@ class QueueHandler(object):
 
     @staticmethod
     def is_workflow_list_in_oldest_first_order(workflow_list):
-        """Placeholder.
-
+        """
+        This function will figure out how is the `workflow_list` is sorted.
         From Cromwell v34 (https://github.com/broadinstitute/cromwell/releases/tag/34), Query results will
-        be returned in reverse chronological order, with the most-recently submitted workflows returned first,
-        the logic here need to be updated.
+        be returned in reverse chronological order, with the most-recently submitted workflows returned first, which
+        is a different behavior from the older versions.
 
         Args:
             workflow_list (list): A list of workflow metadata objects, e.g.
