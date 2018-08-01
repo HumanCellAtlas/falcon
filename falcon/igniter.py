@@ -9,7 +9,7 @@ from falcon import queue_handler
 from falcon import settings
 
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('falcon.{module_path}'.format(module_path=__name__))
 
 
