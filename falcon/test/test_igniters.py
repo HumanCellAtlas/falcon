@@ -363,7 +363,7 @@ class TestIgniter(object):
     @pytest.mark.timeout(1)
     @patch('falcon.igniter.settings.get_settings', mock_get_settings)
     @patch('falcon.igniter.Igniter.release_workflow', stub_release_workflow_breaks_loops)
-    def test_igniter_execution_calls_release_workflow(self):
+    def test_igniter_execution_calls_release_workflow(self, caplog):
         """
         This function asserts the `igniter.release_workflow()` is indeed called by `igniter.execution` when the thread
         is started.
@@ -372,15 +372,18 @@ class TestIgniter(object):
         of `Igniter` succeeds.
 
         The second `@patch` here monkey patches the `igniter.release_workflow()` so it can raises a `StopIteration`
-        exception to stop the ever lasting loop inside of `execution()`.
+        exception to stop the infinite loop inside of `execution()`.
+
+        `caplog` is a fixture of provided by Pytest, which captures all logging streams during the test.
 
         To avoid dangerous hanging unit tests, it also used a `@pytest.mark.timeout(1)` here to set the the timeout to
         be 1 second.
 
         Testing Logic: create an empty `queue.Queue` and call with `igniter.execution()`, expect the while loop
-        to be terminated by the mocked `igniter.release_workflow` by a `StopIteration` right away. After 1 second,
-        this test will timeout and fail.
+        to be terminated by the mocked `igniter.release_workflow` by a `StopIteration` right away, also expect a
+        specific message appears to the logging stream. After 1 second, this test will timeout and fail.
         """
+        caplog.set_level(logging.INFO)
         test_igniter = igniter.Igniter('mock_path')
         mock_handler = mock.MagicMock(spec=queue_handler.QueueHandler)
         mock_queue = Queue(maxsize=1)
@@ -388,3 +391,7 @@ class TestIgniter(object):
 
         with pytest.raises(StopIteration):
             test_igniter.execution(mock_handler)
+
+        info = caplog.text
+
+        assert 'Initializing an igniter with thread' in info
