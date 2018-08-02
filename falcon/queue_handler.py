@@ -59,10 +59,10 @@ class QueueHandler(object):
             Cromwell. Currently this is hard-coded.
     """
 
-    def __init__(self, config_object):
+    def __init__(self, config_path):
         self.workflow_queue = self.create_empty_queue(-1)  # use infinite for the size of the queue for now
         self.thread = None
-        self.settings = settings.get_settings(config_object)
+        self.settings = settings.get_settings(config_path)
         self.queue_update_interval = self.settings.get('queue_update_interval')
         self.cromwell_url = self.settings.get('cromwell_url')
         self.cromwell_query_dict = {
