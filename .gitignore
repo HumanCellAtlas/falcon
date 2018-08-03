@@ -3,6 +3,7 @@
 # Falcon application level files
 config.json
 *caas_key.json
+*deployment.yaml
 
 ### Python template
 # Byte-compiled / optimized / DLL files
