@@ -10,7 +10,6 @@ from cromwell_tools import cromwell_tools
 from falcon import queue_handler
 from falcon import settings
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('falcon.{module_path}'.format(module_path=__name__))
 
@@ -32,7 +31,8 @@ class Igniter(object):
             raise TypeError('Igniter has to access to an instance of the QueueHandler to start!')
 
         if not self.thread:
-            self.thread = Thread(target=self.execution_loop, args=(handler,))
+            # TODO: by appending an uuid to the thread name, we can have multiple igniter threads here in the future
+            self.thread = Thread(target=self.execution_loop, name='igniter', args=(handler,))
         self.thread.start()
 
     def join(self):
@@ -42,11 +42,12 @@ class Igniter(object):
             logger.error('The thread of this igniter is not in a running state.')
 
     def execution_loop(self, handler):
-        logger.info('Igniter | Initializing an igniter with thread => {0} | {1}'.format(get_ident(), datetime.now()))
+        logger.info('Igniter | Initializing an igniter with thread ID => {0} | {1}'.format(get_ident(), datetime.now()))
         while True:
             self.execution_event(handler)
 
     def execution_event(self, handler):
+        logger.info('Igniter | Igniter thread {0} is warmed up and running. | {1}'.format(get_ident(), datetime.now()))
         try:
             workflow = handler.mem_queue.get(block=False)
             self.release_workflow(workflow)
