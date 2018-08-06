@@ -12,6 +12,7 @@ spec:
       labels:
         app: falcon
     spec:
+      terminationGracePeriodSeconds: 0
       containers:
       - name: falcon
         image: quay.io/humancellatlas/secondary-analysis-falcon:{{env "DOCKER_TAG"}}
