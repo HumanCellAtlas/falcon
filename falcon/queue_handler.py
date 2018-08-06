@@ -76,7 +76,7 @@ class QueueHandler(object):
         Starts the thread, which is an instance variable. If thread has not been created, spawns it and then starts it.
         """
         if not self.thread:
-            self.thread = Thread(target=self.execution)
+            self.thread = Thread(target=self.execution_loop, name='queueHandler')
         self.thread.start()
 
     def join(self):
@@ -96,6 +96,7 @@ class QueueHandler(object):
             self.execution_event()
 
     def execution_event(self):
+        logger.info('QueueHandler | QueueHandler thread {0} is warmed up and running. | {1}'.format(get_ident(), datetime.now()))
         workflow_metas = self.retrieve_workflows(self.cromwell_query_dict)
         if workflow_metas:  # This could happen when getting either non-200 codes or 0 workflow from Cromwell
             workflows = self.prepare_workflows(workflow_metas)
