@@ -1,0 +1,15 @@
+version: '3.6'
+services:
+  falcon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+#    restart: always  # This will make the container restarts in the background, use docker-compose logs to see it
+    environment:
+      - CONFIG_PATH=/etc/falcon/config.json
+      - CAAS_KEY=/etc/falcon/caas_key.json
+    volumes:
+      - ./falcon/config.json:/etc/falcon/config.json
+      - ./falcon/caas_key.json:/etc/falcon/caas_key.json
+    ports:
+      - 8080:8080
