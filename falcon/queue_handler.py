@@ -52,7 +52,7 @@ class Queue_Handler(object):
         self.cromwell_query_dict = {
             'status': 'On Hold',
             'additionalQueryResultFields': 'labels',
-            'includeSubworkflows': 'false'  # TODO: should accept False, this is a bug in cromwell_tools, need a fix there
+            'includeSubworkflows': 'false'  # TODO: should accept False, this is a bug in cromwell_tools, need fix there
         }
 
     def spawn_and_start(self):
