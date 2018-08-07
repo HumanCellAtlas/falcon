@@ -1,9 +1,10 @@
 import logging
+import os
 import timeit
 from queue import Queue
 from unittest import mock
 from unittest.mock import patch
-import os
+
 import pytest
 
 from falcon import queue_handler
@@ -317,12 +318,13 @@ class TestQueueHandler(object):
         assert results is None
         assert 'Failed to retrieve workflows from Cromwell' in warn
 
-    @patch('falcon.queue_handler.cromwell_tools.query_workflows', cromwell_simulator.query_workflows_raises_ConnectionError,
+    @patch('falcon.queue_handler.cromwell_tools.query_workflows',
+           cromwell_simulator.query_workflows_raises_ConnectionError,
            create=True)
     def test_retrieve_workflows_returns_none_for_connection_error(self, caplog):
         """
-        This function asserts the `queue_handler.retrieve_workflows()` works properly if it runs into connection errors when talking to
-        the Cromwell.
+        This function asserts the `queue_handler.retrieve_workflows()` works properly if it runs into connection
+        errors when talking to the Cromwell.
         """
         caplog.set_level(logging.ERROR)
         test_handler = queue_handler.QueueHandler(self.config_path)
@@ -333,11 +335,13 @@ class TestQueueHandler(object):
         assert results is None
         assert 'Failed to retrieve workflows from Cromwell' in error
 
-    @patch('falcon.queue_handler.cromwell_tools.query_workflows', cromwell_simulator.query_workflows_raises_RequestException,
+    @patch('falcon.queue_handler.cromwell_tools.query_workflows',
+           cromwell_simulator.query_workflows_raises_RequestException,
            create=True)
     def test_retrieve_workflows_returns_none_for_400_requests_exception(self, caplog):
         """
-        This function asserts the `queue_handler.retrieve_workflows()` works properly if it runs into requests exceptions when talking to
+        This function asserts the `queue_handler.retrieve_workflows()` works properly if it runs into requests
+        exceptions when talking to
         the Cromwell.
         """
         caplog.set_level(logging.ERROR)
@@ -385,8 +389,8 @@ class TestQueueHandler(object):
            create=True)
     def test_execution_event_goes_back_to_sleep_directly_when_it_fails_to_retrieve_workflows(self, caplog):
         """
-        This function asserts when the `queue_handler.execution_event()` fails to retrieve any workflow, it will go back to
-        sleep directly.
+        This function asserts when the `queue_handler.execution_event()` fails to retrieve any workflow, it will go
+        back to sleep directly.
         """
         caplog.set_level(logging.INFO)
         test_handler = queue_handler.QueueHandler(self.config_path)
