@@ -1,0 +1,6 @@
+language: python
+python:
+- '3.6'
+sudo: required
+services: docker
+script: cd falcon/test && bash test.sh

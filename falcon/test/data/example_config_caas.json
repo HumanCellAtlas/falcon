@@ -1,0 +1,7 @@
+{
+  "cromwell_url": "https://example.cromwell-as-a-service.org/api/workflows/v1",
+  "use_caas": true,
+  "collection_name": "test-workflows",
+  "queue_update_interval": 60,
+  "workflow_start_interval": "10"
+}
