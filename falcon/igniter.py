@@ -49,7 +49,7 @@ class Igniter(object):
     def execution_event(self, handler):
         logger.info('Igniter | Igniter thread {0} is warmed up and running. | {1}'.format(get_ident(), datetime.now()))
         try:
-            workflow = handler.mem_queue.get(block=False)
+            workflow = handler.workflow_queue.get(block=False)
             self.release_workflow(workflow)
         except queue.Empty:
             logger.info(
@@ -75,7 +75,7 @@ class Igniter(object):
             else:
                 logger.info('Igniter | Released a workflow {0} | {1}'.format(workflow, datetime.now()))
         except (requests.exceptions.ConnectionError, requests.exceptions.RequestException) as error:
-            logger.error('Igniter | {0} | {1}'.format(error, datetime.now()))
+            logger.error('Igniter | Failed to release a workflow {0}| {1} | {2}'.format(workflow, error, datetime.now()))
 
     @staticmethod
     def sleep_for(sleep_time):

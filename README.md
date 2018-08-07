@@ -1,5 +1,8 @@
 # Falcon
 
+[![Build Status](https://travis-ci.com/HumanCellAtlas/falcon.svg?branch=master)](https://travis-ci.com/HumanCellAtlas/falcon)
+[![Docker Repository on Quay](https://quay.io/repository/humancellatlas/secondary-analysis-falcon/status "Docker Repository on Quay")](https://quay.io/repository/humancellatlas/secondary-analysis-falcon)
+
 The workflow starter of secondary analysis service.
 
 Falcon is currently implemented following a semi single-producer-single/multiple consumer multi-threading based model.

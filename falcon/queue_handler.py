@@ -165,7 +165,7 @@ class QueueHandler(object):
                 logger.debug(
                     'QueueHandler | {0} | {1}'.format(workflow_metas, datetime.now()))  # TODO: remove this or not?
         except (requests.exceptions.ConnectionError, requests.exceptions.RequestException) as error:
-            logger.error('QueueHandler | {0} | {1}'.format(error, datetime.now()))
+            logger.error('QueueHandler | Failed to retrieve workflows from Cromwell | {0} | {1}'.format(error, datetime.now()))
         finally:
             return workflow_metas
 
