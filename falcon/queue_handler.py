@@ -1,12 +1,13 @@
 import logging
 import time
 from datetime import datetime
-from threading import Thread, get_ident
 from queue import Queue
+from threading import Thread, get_ident
 
+import requests
 from cromwell_tools import cromwell_tools
-from falcon import settings
 
+from falcon import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('falcon.{module_path}'.format(module_path=__name__))
@@ -75,7 +76,7 @@ class QueueHandler(object):
         Starts the thread, which is an instance variable. If thread has not been created, spawns it and then starts it.
         """
         if not self.thread:
-            self.thread = Thread(target=self.execution)
+            self.thread = Thread(target=self.execution_loop, name='queueHandler')
         self.thread.start()
 
     def join(self):
@@ -86,6 +87,31 @@ class QueueHandler(object):
             self.thread.join()
         except (AttributeError, AssertionError):
             logger.error('The thread of this queue handler is not in a running state.')
+
+    def execution_loop(self):
+        logger.info(
+                'QueueHandler | Initializing the queue handler with thread => {0} | {1}'.format(get_ident(),
+                                                                                                datetime.now()))
+        while True:
+            self.execution_event()
+
+    def execution_event(self):
+        logger.info('QueueHandler | QueueHandler thread {0} is warmed up and running. | {1}'.format(get_ident(), datetime.now()))
+        workflow_metas = self.retrieve_workflows(self.cromwell_query_dict)
+        if workflow_metas:  # This could happen when getting either non-200 codes or 0 workflow from Cromwell
+            workflows = self.prepare_workflows(workflow_metas)
+
+            # This must happen before `enqueue()` is called, so that each time the queue is refreshed and updated
+            self.set_queue(self.create_empty_queue(-1))
+
+            self.enqueue(workflows)
+        else:
+            logger.info(
+                    'QueueHandler | Cannot fetch any workflow from Cromwell, go back to sleep and wait for next '
+                    'attempt. | {0}'
+                        .format(datetime.now())
+            )
+        self.sleep_for(self.queue_update_interval)
 
     def retrieve_workflows(self, query_dict):
         """
@@ -118,22 +144,30 @@ class QueueHandler(object):
                 ]
             ```
         """
-        response = cromwell_tools.query_workflows(
-            cromwell_url=self.cromwell_url,
-            query_dict=query_dict,
-            cromwell_user=self.settings.get('cromwell_user'),
-            cromwell_password=self.settings.get('cromwell_password'),
-            caas_key=self.settings.get('caas_key')
-        )
-        if response.status_code != 200:
-            logger.warning('Queue | Failed to retrieve workflows from Cromwell | {0} | {1}'.format(response.text, datetime.now()))
-            workflow_metas = None
-        else:
-            workflow_metas = response.json()['results']
-            num_workflows = len(workflow_metas)
-            logger.info('Queue | Retrieved {0} workflows from Cromwell. | {1}'.format(num_workflows, datetime.now()))
-            logger.debug('Queue | {0} | {1}'.format(workflow_metas, datetime.now()))  # TODO: remove this or not?
-        return workflow_metas
+        workflow_metas = None
+        try:
+            response = cromwell_tools.query_workflows(
+                    cromwell_url=self.cromwell_url,
+                    query_dict=query_dict,
+                    cromwell_user=self.settings.get('cromwell_user'),
+                    cromwell_password=self.settings.get('cromwell_password'),
+                    caas_key=self.settings.get('caas_key')
+            )
+            if response.status_code != 200:
+                logger.warning(
+                    'QueueHandler | Failed to retrieve workflows from Cromwell | {0} | {1}'.format(response.text,
+                                                                                                   datetime.now()))
+            else:
+                workflow_metas = response.json()['results']
+                num_workflows = len(workflow_metas)
+                logger.info(
+                    'QueueHandler | Retrieved {0} workflows from Cromwell. | {1}'.format(num_workflows, datetime.now()))
+                logger.debug(
+                    'QueueHandler | {0} | {1}'.format(workflow_metas, datetime.now()))  # TODO: remove this or not?
+        except (requests.exceptions.ConnectionError, requests.exceptions.RequestException) as error:
+            logger.error('QueueHandler | Failed to retrieve workflows from Cromwell | {0} | {1}'.format(error, datetime.now()))
+        finally:
+            return workflow_metas
 
     def prepare_workflows(self, workflow_metas):
         """
@@ -181,7 +215,7 @@ class QueueHandler(object):
             to be put in the in-memory queue.
         """
         for workflow in workflows:
-            logger.debug('Queue | Enqueuing workflow {0} | {1}'.format(workflow, datetime.now()))
+            logger.debug('QueueHandler | Enqueuing workflow {0} | {1}'.format(workflow, datetime.now()))
             self.workflow_queue.put(workflow)  # TODO: Implement and add de-duplication logic here
 
     def set_queue(self, queue):
@@ -193,25 +227,6 @@ class QueueHandler(object):
             queue: A reference to a new concrete queue object which will replace the current one.
         """
         self.workflow_queue = queue
-
-    def execution(self):
-        logger.info(
-            'Queue | Initializing the queue handler with thread => {0} | {1}'.format(get_ident(), datetime.now()))
-
-        while True:
-            workflow_metas = self.retrieve_workflows(self.cromwell_query_dict)
-            if workflow_metas:  # This could happen when getting either non-200 codes or 0 workflow from Cromwell
-                workflows = self.prepare_workflows(workflow_metas)
-
-                self.set_queue(self.create_empty_queue(-1))  # This must happen before `enqueue()` is called!
-
-                self.enqueue(workflows)
-            else:
-                logger.info(
-                    'Queue | Cannot fetch any workflow from Cromwell, go back to sleep and wait for next attempt. | {0}'
-                        .format(datetime.now())
-                )
-            self.sleep_for(self.queue_update_interval)
 
     @staticmethod
     def create_empty_queue(max_queue_size=-1):
@@ -301,8 +316,9 @@ class QueueHandler(object):
             return head <= tail
         except ValueError:
             logger.error(
-                'Queue | An error happened when try to parse the submission timestamps, will assume oldest first for'
-                ' the workflows returned from Cromwell | {0}'.format(datetime.now()))
+                    'Queue | An error happened when try to parse the submission timestamps, will assume oldest first '
+                    'for'
+                    ' the workflows returned from Cromwell | {0}'.format(datetime.now()))
             return True
 
     @staticmethod
