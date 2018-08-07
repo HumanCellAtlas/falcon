@@ -55,6 +55,10 @@ def query_workflows_fail_with_500(cromwell_url, query_dict, cromwell_user, cromw
 
 
 def query_workflows(*args, **kwargs):
+    """
+    Note: This function monkey-patches the `cromwell-tools.query_workflows()` for simulation purposes, DO NOT use this
+    function is unit tests.
+    """
     system_random = random.SystemRandom()
     candidate_func_list = [query_workflows_succeed for i in range(20)]
     candidate_func_list.append(query_workflows_fail_with_400)
@@ -123,6 +127,10 @@ def release_workflow_with_500(cromwell_url, workflow_id, cromwell_user, cromwell
 
 
 def release_workflow(*args, **kwargs):
+    """
+    Note: This function monkey-patches the `cromwell-tools.release_workflow()` for simulation purposes, DO NOT use this
+    function is unit tests.
+    """
     system_random = random.SystemRandom()
     candidate_func_list = [release_workflow_succeed for i in range(20)]
     candidate_func_list.append(release_workflow_with_400)
