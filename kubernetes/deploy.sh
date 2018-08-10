@@ -61,32 +61,32 @@ function main() {
 
 # Main Runner:
 error=0
-if [ -z $1 ]; then
+if [[ -z $1 ]]; then
     printf "\n- You must specify a Falcon version tag!\n"
     error=1
 fi
 
-if [ -z $2 ]; then
+if [[ -z $2 ]]; then
     printf "\n- You must provide the path to a valid config file for Falcon!\n"
     error=1
 fi
 
-if [ -z $3 ]; then
+if [[ -z $3 ]]; then
     printf "\n- Missing boolean value USE_CAAS, will assume not using Cromwell-as-a-Service now.\n"
 fi
 
-if [ -z $4 ]; then
+if [[ -z $4 ]]; then
     printf "\n- Missing the CAAS_KEY_FILE, will assume not using Cromwell-as-a-Service now. You might want to provide a key file for using caas.\n"
 fi
 
-if [ $3 == "true" ]; then
-    if [ -z $4 ]; then
+if [[ $3 == "true" ]]; then
+    if [[ -z $4 ]]; then
         printf "\n- Missing the CAAS_KEY_FILE for caas!\n"
         error=1
     fi
 fi
 
-if [ $error -eq 1 ]; then
+if [[ $error -eq 1 ]]; then
     printf "\nUsage: bash deploy.sh DOCKER_TAG CONFIG_FILE USE_CAAS(optional: true/false) CAAS_KEY_FILE(optional)\n"
     exit 1
 fi
