@@ -35,6 +35,13 @@ class TestSettings(object):
         with pytest.raises(ValueError):
             settings.get_settings('{0}{1}'.format(self.data_dir, self.caas_config))
 
+    def test_get_settings_loads_config_file_for_caas_for_capital_env_variable_correctly(self, monkeypatch):
+        with monkeypatch.context() as ctx:
+            ctx.setenv('CAAS_KEY', 'encrypted_key_content_string_to_communicate_with_caas')
+
+            loaded_settings = settings.get_settings('{0}{1}'.format(self.data_dir, self.caas_config))
+            assert loaded_settings['caas_key'] == 'encrypted_key_content_string_to_communicate_with_caas'
+
     def test_get_settings_loads_config_file_for_caas_correctly(self, monkeypatch):
         with monkeypatch.context() as ctx:
             ctx.setenv('caas_key', 'encrypted_key_content_string_to_communicate_with_caas')

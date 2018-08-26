@@ -30,10 +30,12 @@ def get_settings(config_path):
     if settings['use_caas']:
         if not settings['collection_name']:
             raise ValueError('To use the Cromwell-as-a-Service, you have to pass in a valid collection name.')
-        if not os.environ.get('caas_key') and not os.environ.get('CAAS_KEY'):
+
+        caas_key = os.environ.get('caas_key') or os.environ.get('CAAS_KEY')
+        if not caas_key:
             raise ValueError('No service account json key provided for cromwell-as-a-service.')
         else:
-            settings['caas_key'] = os.environ.get('caas_key')
+            settings['caas_key'] = caas_key
 
     # Check other config parameters
     settings['queue_update_interval'] = int(settings.get('queue_update_interval', 1))
