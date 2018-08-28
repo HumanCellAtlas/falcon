@@ -66,10 +66,7 @@ class QueueHandler(object):
         self.settings = settings.get_settings(config_path)
         self.queue_update_interval = self.settings.get('queue_update_interval')
         self.cromwell_url = self.settings.get('cromwell_url')
-        self.cromwell_query_dict = {
-            'status': 'On Hold',
-            # 'additionalQueryResultFields': 'labels',  # TODO: uncomment this line when we need to de-dup workflows
-        }
+        self.cromwell_query_dict = self.settings.get('cromwell_query_dict')
 
     def spawn_and_start(self):
         """

@@ -18,6 +18,7 @@ def get_settings(config_path):
             queue_update_interval (int): The sleep time between each time the queue handler retrieves
                 workflows from Cromwell.
             workflow_start_interval (int): The sleep time between each time the igniter starts a workflow in Cromwell.
+            cromwell_query_dict (dict): The query used for retrieving cromwell workflows
     """
     with open(config_path, 'r') as f:
         settings = json.load(f)
@@ -40,5 +41,11 @@ def get_settings(config_path):
     # Check other config parameters
     settings['queue_update_interval'] = int(settings.get('queue_update_interval', 1))
     settings['workflow_start_interval'] = int(settings.get('workflow_start_interval', 1))
+
+    # Check cromwell query parameters
+    query_dict = settings.get('cromwell_query_dict', {})
+    if ('status', 'On Hold') not in query_dict.items():
+        query_dict.update({'status': 'On Hold'})
+    settings['cromwell_query_dict'] = query_dict
 
     return settings
