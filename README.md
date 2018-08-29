@@ -27,6 +27,18 @@ A valid config.json file should look like:
 }
 ```
 
+To change the workflows that are started by Falcon, optionally specify a `cromwell_query_dict` in the `config.json`:
+```json
+{
+    "cromwell_query_dict": {
+        "status": "On Hold",
+        "label": {
+            "comment": "scale-test-workflow"
+        }
+    }
+}
+```
+
 **Note:** if you are using Cromwell-as-a-Service with falcon, besides the `config.json`, you also have to provide a valid service account key file `caas_key.json` under `falcon/falcon/config.json` (or change the `falcon-dev-compose.yml` accordingly).
 
 ### Build the docker image

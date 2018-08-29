@@ -31,6 +31,10 @@ class TestSettings(object):
         assert loaded_settings['workflow_start_interval'] == int(self.expected_settings_dic_cromwell_instance.get(
                 'workflow_start_interval'))
 
+    def test_get_settings_cromwell_query_dict_includes_on_hold_status(self):
+        loaded_settings = settings.get_settings('{0}{1}'.format(self.data_dir, self.cromwell_config))
+        assert loaded_settings['cromwell_query_dict']['status'] == 'On Hold'
+
     def test_get_settings_loads_config_file_for_caas_throw_exceptions_without_caas_key(self):
         with pytest.raises(ValueError):
             settings.get_settings('{0}{1}'.format(self.data_dir, self.caas_config))
