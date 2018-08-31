@@ -10,11 +10,12 @@ function create_secret () {
     local CONFIG_NAME=$1
     local CONFIG_FILE=$2
     local CAAS_KEY_FILE=$3
+    local KUBERNETES_NAMESPACE=$4
     
     if [ -z $CAAS_KEY_FILE ]; then
-        kubectl create secret generic $CONFIG_NAME --from-file=config=$CONFIG_FILE
+        kubectl create secret generic $CONFIG_NAME --from-file=config=$CONFIG_FILE --namespace "${KUBERNETES_NAMESPACE}"
     else
-        kubectl create secret generic $CONFIG_NAME --from-file=config=$CONFIG_FILE --from-file=caas_key=$CAAS_KEY_FILE
+        kubectl create secret generic $CONFIG_NAME --from-file=config=$CONFIG_FILE --from-file=caas_key=$CAAS_KEY_FILE --namespace "${KUBERNETES_NAMESPACE}"
     fi
 }
 
@@ -36,7 +37,9 @@ function render_deployment_file() {
 function create_deployment() {
     printf "\nCreating deployment for Falcon...\n"
 
-    kubectl apply -f falcon-deployment.yaml --record
+    local KUBERNETES_NAMESPACE=$1
+
+    kubectl apply -f falcon-deployment.yaml --record --namespace "${KUBERNETES_NAMESPACE}"
 }
 
 function main() {
@@ -44,18 +47,19 @@ function main() {
     local CONFIG_FILE=$2
     local USE_CAAS=${3:-""}
     local CAAS_KEY_FILE=${4:-""}
+    local KUBERNETES_NAMESPACE=${5:-"green-100-us-central1-ns"}
     local FALCON_CONFIG_NAME="falcon-config-$(date '+%Y-%m-%d-%H-%M')"
 
     set -e 
 
     print_line
-    create_secret ${FALCON_CONFIG_NAME} ${CONFIG_FILE} ${CAAS_KEY_FILE}
+    create_secret ${FALCON_CONFIG_NAME} ${CONFIG_FILE} ${CAAS_KEY_FILE} ${KUBERNETES_NAMESPACE}
 
     print_line
     render_deployment_file ${DOCKER_TAG} ${FALCON_CONFIG_NAME} ${USE_CAAS}
 
     print_line
-    create_deployment
+    create_deployment ${KUBERNETES_NAMESPACE}
 }
 
 
@@ -87,8 +91,8 @@ if [[ $3 == "true" ]]; then
 fi
 
 if [[ $error -eq 1 ]]; then
-    printf "\nUsage: bash deploy.sh DOCKER_TAG CONFIG_FILE USE_CAAS(optional: true/false) CAAS_KEY_FILE(optional)\n"
+    printf "\nUsage: bash deploy.sh DOCKER_TAG CONFIG_FILE USE_CAAS(optional: true/false) CAAS_KEY_FILE(optional) KUBERNETES_NAMESPACE(optional)\n"
     exit 1
 fi
 
-main $1 $2 ${3} ${4}
+main $1 $2 ${3} ${4} ${5}
