@@ -6,7 +6,6 @@ from threading import Thread, get_ident
 
 import requests
 from cromwell_tools.cromwell_api import CromwellAPI
-from cromwell_tools.cromwell_auth import CromwellAuth
 
 from falcon import settings
 
@@ -56,7 +55,6 @@ class QueueHandler(object):
         settings (dict): A dictionary contains all settings for the handler.
         queue_update_interval (int): This is the how long the handler will sleep for after each time it retrieves
             workflows from the Cromwell.
-        cromwell_url (str): This is the Cromwell url loaded from the settings.
         cromwell_query_dict (dict): This is the query dictionary handler uses for retrieving workflows from the
             Cromwell. Currently this is hard-coded.
     """
@@ -65,22 +63,9 @@ class QueueHandler(object):
         self.workflow_queue = self.create_empty_queue(-1)  # use infinite for the size of the queue for now
         self.thread = None
         self.settings = settings.get_settings(config_path)
+        self.cromwell_auth = settings.get_cromwell_auth(self.settings)
         self.queue_update_interval = self.settings.get('queue_update_interval')
-        self.cromwell_url = self.settings.get('cromwell_url')
         self.cromwell_query_dict = self.settings.get('cromwell_query_dict')
-
-    @property
-    def cromwell_auth(self):
-        if self.settings.get('use_caas'):
-            return CromwellAuth.harmonize_credentials(
-                url=self.cromwell_url,
-                service_account_key=self.settings.get('caas_key')
-            )
-        return CromwellAuth.harmonize_credentials(
-            url=self.cromwell_url,
-            username=self.settings.get('cromwell_user'),
-            password=self.settings.get('cromwell_password')
-        )
 
     def spawn_and_start(self):
         """

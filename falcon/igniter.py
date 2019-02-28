@@ -6,7 +6,6 @@ from threading import Thread, get_ident
 
 import requests
 from cromwell_tools.cromwell_api import CromwellAPI
-from cromwell_tools.cromwell_auth import CromwellAuth
 
 from falcon import queue_handler
 from falcon import settings
@@ -24,21 +23,8 @@ class Igniter(object):
         """
         self.thread = None
         self.settings = settings.get_settings(config_path)
-        self.cromwell_url = self.settings.get('cromwell_url')
+        self.cromwell_auth = settings.get_cromwell_auth(self.settings)
         self.workflow_start_interval = self.settings.get('workflow_start_interval')
-
-    @property
-    def cromwell_auth(self):
-        if self.settings.get('use_caas'):
-            return CromwellAuth.harmonize_credentials(
-                url=self.cromwell_url,
-                service_account_key=self.settings.get('caas_key')
-            )
-        return CromwellAuth.harmonize_credentials(
-            url=self.cromwell_url,
-            username=self.settings.get('cromwell_user'),
-            password=self.settings.get('cromwell_password')
-        )
 
     def spawn_and_start(self, handler):
         if not isinstance(handler, queue_handler.QueueHandler):
