@@ -5,7 +5,8 @@ from datetime import datetime
 from threading import Thread, get_ident
 
 import requests
-from cromwell_tools import cromwell_tools
+from cromwell_tools.cromwell_api import CromwellAPI
+from cromwell_tools.cromwell_auth import CromwellAuth
 
 from falcon import queue_handler
 from falcon import settings
@@ -25,6 +26,19 @@ class Igniter(object):
         self.settings = settings.get_settings(config_path)
         self.cromwell_url = self.settings.get('cromwell_url')
         self.workflow_start_interval = self.settings.get('workflow_start_interval')
+
+    @property
+    def cromwell_auth(self):
+        if self.settings.get('use_caas'):
+            return CromwellAuth.harmonize_credentials(
+                url=self.cromwell_url,
+                service_account_key=self.settings.get('caas_key')
+            )
+        return CromwellAuth.harmonize_credentials(
+            url=self.cromwell_url,
+            username=self.settings.get('cromwell_user'),
+            password=self.settings.get('cromwell_password')
+        )
 
     def spawn_and_start(self, handler):
         if not isinstance(handler, queue_handler.QueueHandler):
@@ -61,12 +75,9 @@ class Igniter(object):
 
     def release_workflow(self, workflow):
         try:
-            response = cromwell_tools.release_workflow(
-                    cromwell_url=self.cromwell_url,
-                    workflow_id=workflow.id,
-                    cromwell_user=self.settings.get('cromwell_user'),
-                    cromwell_password=self.settings.get('cromwell_password'),
-                    caas_key=self.settings.get('caas_key')
+            response = CromwellAPI.release_hold(
+                    uuid=workflow.id,
+                    auth=self.cromwell_auth,
             )
             if response.status_code != 200:
                 logger.warning(
