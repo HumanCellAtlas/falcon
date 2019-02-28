@@ -5,7 +5,8 @@ from queue import Queue
 from threading import Thread, get_ident
 
 import requests
-from cromwell_tools import cromwell_tools
+from cromwell_tools.cromwell_api import CromwellAPI
+from cromwell_tools.cromwell_auth import CromwellAuth
 
 from falcon import settings
 
@@ -67,6 +68,19 @@ class QueueHandler(object):
         self.queue_update_interval = self.settings.get('queue_update_interval')
         self.cromwell_url = self.settings.get('cromwell_url')
         self.cromwell_query_dict = self.settings.get('cromwell_query_dict')
+
+    @property
+    def cromwell_auth(self):
+        if self.settings.get('use_caas'):
+            return CromwellAuth.harmonize_credentials(
+                url=self.cromwell_url,
+                service_account_key=self.settings.get('caas_key')
+            )
+        return CromwellAuth.harmonize_credentials(
+            url=self.cromwell_url,
+            username=self.settings.get('cromwell_user'),
+            password=self.settings.get('cromwell_password')
+        )
 
     def spawn_and_start(self):
         """
@@ -143,12 +157,9 @@ class QueueHandler(object):
         """
         workflow_metas = None
         try:
-            response = cromwell_tools.query_workflows(
-                    cromwell_url=self.cromwell_url,
+            response = CromwellAPI.query(
+                    auth=self.cromwell_auth,
                     query_dict=query_dict,
-                    cromwell_user=self.settings.get('cromwell_user'),
-                    cromwell_password=self.settings.get('cromwell_password'),
-                    caas_key=self.settings.get('caas_key')
             )
             if response.status_code != 200:
                 logger.warning(
