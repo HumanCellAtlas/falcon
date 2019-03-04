@@ -54,9 +54,9 @@ def query_workflows_fail_with_500(query_dict, auth):
     return response
 
 
-def query_workflows(*args, **kwargs):
+def query(*args, **kwargs):
     """
-    Note: This function monkey-patches the `cromwell-tools.query_workflows()` for simulation purposes, DO NOT use this
+    Note: This function monkey-patches the `cromwell-tools.query()` for simulation purposes, DO NOT use this
     function is unit tests.
     """
     system_random = random.SystemRandom()
@@ -126,9 +126,9 @@ def release_workflow_with_500(uuid, auth):
     return response
 
 
-def release_workflow(*args, **kwargs):
+def release_hold(*args, **kwargs):
     """
-    Note: This function monkey-patches the `cromwell-tools.release_workflow()` for simulation purposes, DO NOT use this
+    Note: This function monkey-patches the `cromwell-tools.release_hold()` for simulation purposes, DO NOT use this
     function is unit tests.
     """
     system_random = random.SystemRandom()
