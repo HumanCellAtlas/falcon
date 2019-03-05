@@ -17,7 +17,7 @@ modify the `falcon-dev-compose.yml` file to locate where the `config.json` is.
 A valid config.json file should look like:
 ```json
 {
-    "cromwell_url": "https://your.cromwell.domain.here/api/workflows/v1",
+    "cromwell_url": "https://your.cromwell.domain.here",
     "use_caas": false,
     "cromwell_user": "test",
     "cromwell_password": "test",
