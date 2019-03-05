@@ -1,5 +1,6 @@
 import json
 import os
+from cromwell_tools.cromwell_auth import CromwellAuth
 
 
 def get_settings(config_path):
@@ -49,3 +50,17 @@ def get_settings(config_path):
     settings['cromwell_query_dict'] = query_dict
 
     return settings
+
+
+def get_cromwell_auth(settings):
+    cromwell_url = settings.get('cromwell_url')
+    if settings.get('use_caas'):
+        return CromwellAuth.harmonize_credentials(
+            url=cromwell_url,
+            service_account_key=settings.get('caas_key')
+        )
+    return CromwellAuth.harmonize_credentials(
+        url=cromwell_url,
+        username=settings.get('cromwell_user'),
+        password=settings.get('cromwell_password')
+    )

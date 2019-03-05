@@ -5,7 +5,7 @@ from datetime import datetime
 from threading import Thread, get_ident
 
 import requests
-from cromwell_tools import cromwell_tools
+from cromwell_tools.cromwell_api import CromwellAPI
 
 from falcon import queue_handler
 from falcon import settings
@@ -23,7 +23,7 @@ class Igniter(object):
         """
         self.thread = None
         self.settings = settings.get_settings(config_path)
-        self.cromwell_url = self.settings.get('cromwell_url')
+        self.cromwell_auth = settings.get_cromwell_auth(self.settings)
         self.workflow_start_interval = self.settings.get('workflow_start_interval')
 
     def spawn_and_start(self, handler):
@@ -61,12 +61,9 @@ class Igniter(object):
 
     def release_workflow(self, workflow):
         try:
-            response = cromwell_tools.release_workflow(
-                    cromwell_url=self.cromwell_url,
-                    workflow_id=workflow.id,
-                    cromwell_user=self.settings.get('cromwell_user'),
-                    cromwell_password=self.settings.get('cromwell_password'),
-                    caas_key=self.settings.get('caas_key')
+            response = CromwellAPI.release_hold(
+                    uuid=workflow.id,
+                    auth=self.cromwell_auth,
             )
             if response.status_code != 200:
                 logger.warning(

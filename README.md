@@ -60,7 +60,8 @@ Falcon comes with a light-weight Cromwell simulator, which provides a basic set 
 
 To run the simulation, you have to:
 
-1. Go to both `queue_handler.py` and `igniter.py` and replace the `from cromwell_tools import cromwell_tools` with `from falcon.test import cromwell_simulator as cromwell_tools` respectively.
+1. Go to both `queue_handler.py` and `igniter.py` and replace `from cromwell_tools.cromwell_api import CromwellAPI` with
+`from falcon.test import cromwell_simulator as CromwellAPI`.
 2. Start Falcon in develop mode, e.g. from the root of the repository:
     ```bash
     docker-compose -f falcon-dev-compose.yml up --build

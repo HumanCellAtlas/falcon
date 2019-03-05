@@ -102,7 +102,7 @@ class TestIgniter(object):
 
         assert 'The thread of this igniter is not in a running state.' in error
 
-    @patch('falcon.igniter.cromwell_tools.release_workflow', cromwell_simulator.release_workflow_succeed, create=True)
+    @patch('falcon.igniter.CromwellAPI.release_hold', cromwell_simulator.release_workflow_succeed, create=True)
     def test_release_workflow_successfully_releases_a_workflow(self, caplog):
         """
         This function asserts the `igniter.release_workflow()` can work properly when it gets 200 OK from the Cromwell.
@@ -116,7 +116,7 @@ class TestIgniter(object):
 
         assert 'Released a workflow fake_workflow_id' in info
 
-    @patch('falcon.igniter.cromwell_tools.release_workflow', cromwell_simulator.release_workflow_with_403, create=True)
+    @patch('falcon.igniter.CromwellAPI.release_hold', cromwell_simulator.release_workflow_with_403, create=True)
     def test_release_workflow_handles_403_response_code(self, caplog):
         """
         This function asserts the `igniter.release_workflow()` can work properly when it gets 403 error from the
@@ -131,7 +131,7 @@ class TestIgniter(object):
 
         assert 'Failed to release a workflow fake_workflow_id' in warn
 
-    @patch('falcon.igniter.cromwell_tools.release_workflow', cromwell_simulator.release_workflow_with_404, create=True)
+    @patch('falcon.igniter.CromwellAPI.release_hold', cromwell_simulator.release_workflow_with_404, create=True)
     def test_release_workflow_handles_404_response_code(self, caplog):
         """
         This function asserts the `igniter.release_workflow()` can work properly when it gets 404 error from the
@@ -146,7 +146,7 @@ class TestIgniter(object):
 
         assert 'Failed to release a workflow fake_workflow_id' in warn
 
-    @patch('falcon.igniter.cromwell_tools.release_workflow', cromwell_simulator.release_workflow_with_500, create=True)
+    @patch('falcon.igniter.CromwellAPI.release_hold', cromwell_simulator.release_workflow_with_500, create=True)
     def test_release_workflow_handles_500_response_code(self, caplog):
         """
         This function asserts the `igniter.release_workflow()` can work properly when it gets 500 error from the
@@ -161,7 +161,7 @@ class TestIgniter(object):
 
         assert 'Failed to release a workflow fake_workflow_id' in warn
 
-    @patch('falcon.igniter.cromwell_tools.release_workflow', cromwell_simulator.release_workflow_raises_ConnectionError,
+    @patch('falcon.igniter.CromwellAPI.release_hold', cromwell_simulator.release_workflow_raises_ConnectionError,
            create=True)
     def test_release_workflow_handles_connection_error(self, caplog):
         """
@@ -177,7 +177,7 @@ class TestIgniter(object):
 
         assert 'Failed to release a workflow fake_workflow_id' in error
 
-    @patch('falcon.igniter.cromwell_tools.release_workflow',
+    @patch('falcon.igniter.CromwellAPI.release_hold',
            cromwell_simulator.release_workflow_raises_RequestException, create=True)
     def test_release_workflow_handles_requests_exception(self, caplog):
         """

@@ -268,7 +268,7 @@ class TestQueueHandler(object):
         assert initial_queue_id != final_queue_id
         assert final_queue_id == another_queue_id
 
-    @patch('falcon.queue_handler.cromwell_tools.query_workflows', cromwell_simulator.query_workflows_succeed,
+    @patch('falcon.queue_handler.CromwellAPI.query', cromwell_simulator.query_workflows_succeed,
            create=True)
     def test_retrieve_workflows_returns_query_results_successfully(self, caplog):
         """
@@ -286,7 +286,7 @@ class TestQueueHandler(object):
         assert num_workflows > 0
         assert 'Retrieved {0} workflows from Cromwell.'.format(num_workflows) in info
 
-    @patch('falcon.queue_handler.cromwell_tools.query_workflows', cromwell_simulator.query_workflows_fail_with_500,
+    @patch('falcon.queue_handler.CromwellAPI.query', cromwell_simulator.query_workflows_fail_with_500,
            create=True)
     def test_retrieve_workflows_returns_none_for_500_response_code(self, caplog):
         """
@@ -302,7 +302,7 @@ class TestQueueHandler(object):
         assert results is None
         assert 'Failed to retrieve workflows from Cromwell' in warn
 
-    @patch('falcon.queue_handler.cromwell_tools.query_workflows', cromwell_simulator.query_workflows_fail_with_400,
+    @patch('falcon.queue_handler.CromwellAPI.query', cromwell_simulator.query_workflows_fail_with_400,
            create=True)
     def test_retrieve_workflows_returns_none_for_400_response_code(self, caplog):
         """
@@ -318,7 +318,7 @@ class TestQueueHandler(object):
         assert results is None
         assert 'Failed to retrieve workflows from Cromwell' in warn
 
-    @patch('falcon.queue_handler.cromwell_tools.query_workflows',
+    @patch('falcon.queue_handler.CromwellAPI.query',
            cromwell_simulator.query_workflows_raises_ConnectionError,
            create=True)
     def test_retrieve_workflows_returns_none_for_connection_error(self, caplog):
@@ -335,7 +335,7 @@ class TestQueueHandler(object):
         assert results is None
         assert 'Failed to retrieve workflows from Cromwell' in error
 
-    @patch('falcon.queue_handler.cromwell_tools.query_workflows',
+    @patch('falcon.queue_handler.CromwellAPI.query',
            cromwell_simulator.query_workflows_raises_RequestException,
            create=True)
     def test_retrieve_workflows_returns_none_for_400_requests_exception(self, caplog):
@@ -385,7 +385,7 @@ class TestQueueHandler(object):
             assert item.id == expect_result[idx]
 
     @pytest.mark.timeout(2)
-    @patch('falcon.queue_handler.cromwell_tools.query_workflows', cromwell_simulator.query_workflows_fail_with_500,
+    @patch('falcon.queue_handler.CromwellAPI.query', cromwell_simulator.query_workflows_fail_with_500,
            create=True)
     def test_execution_event_goes_back_to_sleep_directly_when_it_fails_to_retrieve_workflows(self, caplog):
         """
