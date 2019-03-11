@@ -31,7 +31,6 @@ groups:
       - pipelines-software-engineers
       - pipelines-devops
 
-
 #  computational-review:
 #    reviews:
 #      required: 1
