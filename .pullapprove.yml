@@ -1,7 +1,7 @@
 version: 3
 
 pullapprove_conditions:
-- condition: "'*travis*' in statuses.successful"
+- condition: "'*Travis*' in statuses.successful"
   unmet_status: failure
   explanation: "Tests must pass before review starts"
 
