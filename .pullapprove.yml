@@ -3,7 +3,7 @@ version: 3
 pullapprove_conditions:
 - condition: "'*Travis*' in statuses.successful"
   unmet_status: failure
-  explanation: "Tests must pass before review starts"
+  explanation: "Travis Tests must pass before review starts"
 
 groups:
   pullapprove-admins:
@@ -35,4 +35,3 @@ notifications:
 - when: pullapprove.approved
   if: "author_association == 'CONTRIBUTOR'"
   comment: "The review is completed. Thanks @{{ author }}."
-
