@@ -28,9 +28,7 @@ def query_workflows_succeed(query_dict, auth):
     response.status_code = 200
     response.json.return_value = {
         'results': [
-            {
-                'id': str(uuid4()), 'submission': '2018-05-25T19:03:51.736Z'
-            } for i in range(random.randint(1, 10))
+            {'id': str(uuid4()), 'submission': '2018-05-25T19:03:51.736Z'} for i in range(random.randint(1, 10))
         ]
     }
     return response
@@ -39,10 +37,7 @@ def query_workflows_succeed(query_dict, auth):
 def query_workflows_fail_with_400(query_dict, auth):
     response = Mock(spec=Response)
     response.status_code = 400
-    response.json.return_value = {
-        'status' : 'fail',
-        'message': 'An error message for Malformed Request.'
-    }
+    response.json.return_value = {'status': 'fail', 'message': 'An error message for Malformed Request.'}
     response.text = json.dumps(response.json.return_value)
     return response
 
@@ -68,9 +63,7 @@ def query(*args, **kwargs):
 
     # Make the possibilities of getting the status codes 200:400:500 as 20:1:1 in the simulation
     # There are also 1/12 probabilities the simulator will intentionally throw out some connection issues
-    query_func = system_random.choice(
-            candidate_func_list
-    )
+    query_func = system_random.choice(candidate_func_list)
     return query_func(*args, **kwargs)
 
 
@@ -86,10 +79,7 @@ def release_workflow_with_400(uuid, auth):
     response = Mock(spec=Response)
     # TODO: figure out when can we get this type of error
     response.status_code = 400
-    response.json.return_value = {
-        'status' : 'fail',
-        'message': 'An error message for Malformed Request.'
-    }
+    response.json.return_value = {'status': 'fail', 'message': 'An error message for Malformed Request.'}
     response.text = json.dumps(response.json.return_value)
     return response
 
@@ -98,9 +88,9 @@ def release_workflow_with_403(uuid, auth):
     response = Mock(spec=Response)
     response.status_code = 403
     response.json.return_value = {
-        'status' : 'error',
+        'status': 'error',
         'message': 'Couldn\'t change status of workflow {} to \'Submitted\' because the workflow'
-                   ' is not in \'On Hold\' state'.format(uuid)
+        ' is not in \'On Hold\' state'.format(uuid),
     }
     response.text = json.dumps(response.json.return_value)
     return response
@@ -111,10 +101,7 @@ def release_workflow_with_404(uuid, auth):
     # TODO: track on the issue: https://github.com/broadinstitute/cromwell/issues/3911, which causes the Cromwell
     # to return 500 code for 404 errors for now
     response.status_code = 404
-    response.json.return_value = {
-        'status' : 'fail',
-        'message': 'Unrecognized workflow ID: {}'.format(auth)
-    }
+    response.json.return_value = {'status': 'fail', 'message': 'Unrecognized workflow ID: {}'.format(auth)}
     response.text = json.dumps(response.json.return_value)
     return response
 
@@ -142,7 +129,5 @@ def release_hold(*args, **kwargs):
 
     # Make the possibilities of getting the status codes 200:400:403:404:500 as 20:1:1:1:1 in the simulation
     # There are also 1/13 probabilities the simulator will intentionally throw out some connection issues
-    release_func = system_random.choice(
-            candidate_func_list
-    )
+    release_func = system_random.choice(candidate_func_list)
     return release_func(*args, **kwargs)

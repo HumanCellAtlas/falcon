@@ -86,13 +86,15 @@ class QueueHandler(object):
 
     def execution_loop(self):
         logger.info(
-                'QueueHandler | Initializing the queue handler with thread => {0} | {1}'.format(get_ident(),
-                                                                                                datetime.now()))
+            'QueueHandler | Initializing the queue handler with thread => {0} | {1}'.format(get_ident(), datetime.now())
+        )
         while True:
             self.execution_event()
 
     def execution_event(self):
-        logger.info('QueueHandler | QueueHandler thread {0} is warmed up and running. | {1}'.format(get_ident(), datetime.now()))
+        logger.info(
+            'QueueHandler | QueueHandler thread {0} is warmed up and running. | {1}'.format(get_ident(), datetime.now())
+        )
         workflow_metas = self.retrieve_workflows(self.cromwell_query_dict)
         if workflow_metas:  # This could happen when getting either non-200 codes or 0 workflow from Cromwell
             workflows = self.prepare_workflows(workflow_metas)
@@ -103,9 +105,8 @@ class QueueHandler(object):
             self.enqueue(workflows)
         else:
             logger.info(
-                    'QueueHandler | Cannot fetch any workflow from Cromwell, go back to sleep and wait for next '
-                    'attempt. | {0}'
-                        .format(datetime.now())
+                'QueueHandler | Cannot fetch any workflow from Cromwell, go back to sleep and wait for next '
+                'attempt. | {0}'.format(datetime.now())
             )
         self.sleep_for(self.queue_update_interval)
 
@@ -142,23 +143,26 @@ class QueueHandler(object):
         """
         workflow_metas = None
         try:
-            response = CromwellAPI.query(
-                    auth=self.cromwell_auth,
-                    query_dict=query_dict,
-            )
+            response = CromwellAPI.query(auth=self.cromwell_auth, query_dict=query_dict)
             if response.status_code != 200:
                 logger.warning(
-                    'QueueHandler | Failed to retrieve workflows from Cromwell | {0} | {1}'.format(response.text,
-                                                                                                   datetime.now()))
+                    'QueueHandler | Failed to retrieve workflows from Cromwell | {0} | {1}'.format(
+                        response.text, datetime.now()
+                    )
+                )
             else:
                 workflow_metas = response.json()['results']
                 num_workflows = len(workflow_metas)
                 logger.info(
-                    'QueueHandler | Retrieved {0} workflows from Cromwell. | {1}'.format(num_workflows, datetime.now()))
+                    'QueueHandler | Retrieved {0} workflows from Cromwell. | {1}'.format(num_workflows, datetime.now())
+                )
                 logger.debug(
-                    'QueueHandler | {0} | {1}'.format(workflow_metas, datetime.now()))  # TODO: remove this or not?
+                    'QueueHandler | {0} | {1}'.format(workflow_metas, datetime.now())
+                )  # TODO: remove this or not?
         except (requests.exceptions.ConnectionError, requests.exceptions.RequestException) as error:
-            logger.error('QueueHandler | Failed to retrieve workflows from Cromwell | {0} | {1}'.format(error, datetime.now()))
+            logger.error(
+                'QueueHandler | Failed to retrieve workflows from Cromwell | {0} | {1}'.format(error, datetime.now())
+            )
         finally:
             return workflow_metas
 
@@ -309,9 +313,10 @@ class QueueHandler(object):
             return head <= tail
         except ValueError:
             logger.error(
-                    'Queue | An error happened when try to parse the submission timestamps, will assume oldest first '
-                    'for'
-                    ' the workflows returned from Cromwell | {0}'.format(datetime.now()))
+                'Queue | An error happened when try to parse the submission timestamps, will assume oldest first '
+                'for'
+                ' the workflows returned from Cromwell | {0}'.format(datetime.now())
+            )
             return True
 
     @staticmethod

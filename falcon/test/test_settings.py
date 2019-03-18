@@ -25,11 +25,14 @@ class TestSettings(object):
         assert loaded_settings['use_caas'] == self.expected_settings_dic_cromwell_instance.get('use_caas')
         assert loaded_settings['cromwell_user'] == self.expected_settings_dic_cromwell_instance.get('cromwell_user')
         assert loaded_settings['cromwell_password'] == self.expected_settings_dic_cromwell_instance.get(
-                'cromwell_password')
-        assert loaded_settings['queue_update_interval'] == int(self.expected_settings_dic_cromwell_instance.get(
-                'queue_update_interval'))
-        assert loaded_settings['workflow_start_interval'] == int(self.expected_settings_dic_cromwell_instance.get(
-                'workflow_start_interval'))
+            'cromwell_password'
+        )
+        assert loaded_settings['queue_update_interval'] == int(
+            self.expected_settings_dic_cromwell_instance.get('queue_update_interval')
+        )
+        assert loaded_settings['workflow_start_interval'] == int(
+            self.expected_settings_dic_cromwell_instance.get('workflow_start_interval')
+        )
 
     def test_get_settings_cromwell_query_dict_includes_on_hold_status(self):
         loaded_settings = settings.get_settings('{0}{1}'.format(self.data_dir, self.cromwell_config))
@@ -55,7 +58,9 @@ class TestSettings(object):
             assert loaded_settings['use_caas'] == self.expected_settings_dic_caas.get('use_caas')
             assert loaded_settings['caas_key'] == 'encrypted_key_content_string_to_communicate_with_caas'
             assert loaded_settings['collection_name'] == self.expected_settings_dic_caas.get('collection_name')
-            assert loaded_settings['queue_update_interval'] == int(self.expected_settings_dic_caas.get(
-                    'queue_update_interval'))
-            assert loaded_settings['workflow_start_interval'] == int(self.expected_settings_dic_caas.get(
-                    'workflow_start_interval'))
+            assert loaded_settings['queue_update_interval'] == int(
+                self.expected_settings_dic_caas.get('queue_update_interval')
+            )
+            assert loaded_settings['workflow_start_interval'] == int(
+                self.expected_settings_dic_caas.get('workflow_start_interval')
+            )

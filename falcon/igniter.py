@@ -53,26 +53,27 @@ class Igniter(object):
             self.release_workflow(workflow)
         except queue.Empty:
             logger.info(
-                    'Igniter | The in-memory queue is empty, go back to sleep and wait for the handler to retrieve '
-                    'workflows. | {0}'.format(
-                            datetime.now()))
+                'Igniter | The in-memory queue is empty, go back to sleep and wait for the handler to retrieve '
+                'workflows. | {0}'.format(datetime.now())
+            )
         finally:
             self.sleep_for(self.workflow_start_interval)
 
     def release_workflow(self, workflow):
         try:
-            response = CromwellAPI.release_hold(
-                    uuid=workflow.id,
-                    auth=self.cromwell_auth,
-            )
+            response = CromwellAPI.release_hold(uuid=workflow.id, auth=self.cromwell_auth)
             if response.status_code != 200:
                 logger.warning(
-                        'Igniter | Failed to release a workflow {0} | {1} | {2}'.format(workflow, response.text,
-                                                                                        datetime.now()))
+                    'Igniter | Failed to release a workflow {0} | {1} | {2}'.format(
+                        workflow, response.text, datetime.now()
+                    )
+                )
             else:
                 logger.info('Igniter | Released a workflow {0} | {1}'.format(workflow, datetime.now()))
         except (requests.exceptions.ConnectionError, requests.exceptions.RequestException) as error:
-            logger.error('Igniter | Failed to release a workflow {0}| {1} | {2}'.format(workflow, error, datetime.now()))
+            logger.error(
+                'Igniter | Failed to release a workflow {0}| {1} | {2}'.format(workflow, error, datetime.now())
+            )
 
     @staticmethod
     def sleep_for(sleep_time):

@@ -55,12 +55,7 @@ def get_settings(config_path):
 def get_cromwell_auth(settings):
     cromwell_url = settings.get('cromwell_url')
     if settings.get('use_caas'):
-        return CromwellAuth.harmonize_credentials(
-            url=cromwell_url,
-            service_account_key=settings.get('caas_key')
-        )
+        return CromwellAuth.harmonize_credentials(url=cromwell_url, service_account_key=settings.get('caas_key'))
     return CromwellAuth.harmonize_credentials(
-        url=cromwell_url,
-        username=settings.get('cromwell_user'),
-        password=settings.get('cromwell_password')
+        url=cromwell_url, username=settings.get('cromwell_user'), password=settings.get('cromwell_password')
     )
