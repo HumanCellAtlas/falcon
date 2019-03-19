@@ -17,14 +17,15 @@ Falcon is currently implemented following a semi single-producer-single/multiple
 ### Code Style
 
 The Falcon code base is complying with the PEP-8 and using [Black](https://github.com/ambv/black) to 
-format our code, in order to avoid "nitpicky" comments during the code review process so we spend more
-time discussing about the logic, not code styles.
+format our code, in order to avoid "nitpicky" comments during the code review process so we spend more time discussing about the logic, not code styles.
 
 In order to enable the auto-formatting in the development process, you have to spend a few seconds setting up the `pre-commit` the first time you clone the repo:
 
-1. Install pre-commit and black: `pip install pre-commit black` (or simply `pip install -r requirements.txt`).
+1. Install pre-commit and black: `pip install pre-commit black` (or simply run `pip install -r requirements.txt`). _Make sure you install the same versions of `Black` and `pre-commit` as those listed in the `requirements.txt`._
 2. Make sure the `.pre-commit-config.yaml` still looks OK to you.
 3. Run `pre-commit install` to install the git hook.
+
+Please make sure you followed the above steps, otherwise your commits might fail at the linting test!
 
 ### Configuration
 To make the falcon work properly, you have to either create a `config.json` under `falcon/falcon/config.json`, or
