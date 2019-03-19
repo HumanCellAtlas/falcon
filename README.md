@@ -21,7 +21,7 @@ format our code, in order to avoid "nitpicky" comments during the code review pr
 
 In order to enable the auto-formatting in the development process, you have to spend a few seconds setting up the `pre-commit` the first time you clone the repo:
 
-1. Install pre-commit and black: `pip install pre-commit black` (or simply run `pip install -r requirements.txt`). _Make sure you install the same versions of `Black` and `pre-commit` as those listed in the `requirements.txt`._
+1. Install `pre-commit` by running: `pip install pre-commit` (or simply run `pip install -r requirements.txt`).
 2. Make sure the `.pre-commit-config.yaml` still looks OK to you.
 3. Run `pre-commit install` to install the git hook.
 
