@@ -28,7 +28,8 @@ def query_workflows_succeed(query_dict, auth):
     response.status_code = 200
     response.json.return_value = {
         'results': [
-            {'id': str(uuid4()), 'submission': '2018-05-25T19:03:51.736Z'} for i in range(random.randint(1, 10))
+            {'id': str(uuid4()), 'submission': '2018-05-25T19:03:51.736Z'}
+            for i in range(random.randint(1, 10))
         ]
     }
     return response
@@ -37,7 +38,10 @@ def query_workflows_succeed(query_dict, auth):
 def query_workflows_fail_with_400(query_dict, auth):
     response = Mock(spec=Response)
     response.status_code = 400
-    response.json.return_value = {'status': 'fail', 'message': 'An error message for Malformed Request.'}
+    response.json.return_value = {
+        'status': 'fail',
+        'message': 'An error message for Malformed Request.',
+    }
     response.text = json.dumps(response.json.return_value)
     return response
 
@@ -79,7 +83,10 @@ def release_workflow_with_400(uuid, auth):
     response = Mock(spec=Response)
     # TODO: figure out when can we get this type of error
     response.status_code = 400
-    response.json.return_value = {'status': 'fail', 'message': 'An error message for Malformed Request.'}
+    response.json.return_value = {
+        'status': 'fail',
+        'message': 'An error message for Malformed Request.',
+    }
     response.text = json.dumps(response.json.return_value)
     return response
 
@@ -101,7 +108,10 @@ def release_workflow_with_404(uuid, auth):
     # TODO: track on the issue: https://github.com/broadinstitute/cromwell/issues/3911, which causes the Cromwell
     # to return 500 code for 404 errors for now
     response.status_code = 404
-    response.json.return_value = {'status': 'fail', 'message': 'Unrecognized workflow ID: {}'.format(auth)}
+    response.json.return_value = {
+        'status': 'fail',
+        'message': 'Unrecognized workflow ID: {}'.format(auth),
+    }
     response.text = json.dumps(response.json.return_value)
     return response
 
