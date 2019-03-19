@@ -1,7 +1,11 @@
 # Falcon
 
-[![Build Status](https://travis-ci.com/HumanCellAtlas/falcon.svg?branch=master)](https://travis-ci.com/HumanCellAtlas/falcon)
+[![Travis (.com)](https://img.shields.io/travis/com/HumanCellAtlas/falcon.svg?label=Unit%20Test%20on%20Travis%20CI%20&style=flat-square)](https://travis-ci.com/HumanCellAtlas/falcon)
 [![Docker Repository on Quay](https://quay.io/repository/humancellatlas/secondary-analysis-falcon/status "Docker Repository on Quay")](https://quay.io/repository/humancellatlas/secondary-analysis-falcon)
+[![GitHub Release](https://img.shields.io/github/release/HumanCellAtlas/falcon.svg?label=Latest%20Release&style=flat-square&colorB=green)](https://github.com/HumanCellAtlas/falcon/releases)
+![Python Version](https://img.shields.io/badge/Python-3.6%20%7C%203.7-green.svg?style=flat-square&logo=python&colorB=blue)
+[![License](https://img.shields.io/github/license/HumanCellAtlas/falcon.svg?style=flat-square)](https://github.com/HumanCellAtlas/falcon/blob/master/LICENSE)
+[![Code style: black](https://img.shields.io/badge/Code%20Style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 
 The workflow starter of secondary analysis service.
 
@@ -9,6 +13,18 @@ Falcon is currently implemented following a semi single-producer-single/multiple
 
 
 ## Development
+
+### Code Style
+
+The Falcon code base is complying with the PEP-8 and using [Black](https://github.com/ambv/black) to 
+format our code, in order to avoid "nitpicky" comments during the code review process so we spend more
+time discussing about the logic, not code styles.
+
+In order to enable the auto-formatting in the development process, you have to spend a few seconds setting up the `pre-commit` the first time you clone the repo:
+
+1. Install pre-commit and black: `pip install pre-commit black` (or simply `pip install -r requirements.txt`).
+2. Make sure the `.pre-commit-config.yaml` still looks OK to you.
+3. Run `pre-commit install` to install the git hook.
 
 ### Configuration
 To make the falcon work properly, you have to either create a `config.json` under `falcon/falcon/config.json`, or

@@ -5,10 +5,17 @@ python:
 
 jobs:
   include:
+    # The linting test is fast and cheap so run it first
     - stage: Linting Test
       install: "pip install -r requirements.txt"
-      script: flake8 falcon/
+      script: 
+        # Check Black code style compliance
+        - black falcon/ --skip-string-normalization --check
+        # Check PEP-8 compliance
+        - flake8 falcon/
 
+    # The unit test is a bit more expensive so run it only
+    # if the linting test passes
     - stage: Unit Test
       sudo: required
       services: docker
