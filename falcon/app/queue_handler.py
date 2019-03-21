@@ -7,7 +7,7 @@ from threading import Thread, get_ident
 import requests
 from cromwell_tools.cromwell_api import CromwellAPI
 
-from falcon import settings
+from app import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('falcon.{module_path}'.format(module_path=__name__))

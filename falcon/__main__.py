@@ -1,13 +1,13 @@
 import os
 import threading
-from falcon import app
-from falcon.igniter import Igniter
-from falcon.queue_handler import QueueHandler
+from app import falcon_app
+from app.igniter import Igniter
+from app.queue_handler import QueueHandler
 
 
 class WebThread(threading.Thread):
     def start(self):
-        app.run(port='8080', host='0.0.0.0', debug=True)
+        falcon_app.run(port='8080', host='0.0.0.0', debug=True)
 
 
 if __name__ == '__main__':

@@ -1,7 +1,8 @@
+import json
 import threading
-from falcon import app
+from . import falcon_app as app
 
-FALCON_THREAD_NAMES = ['queueHandler', 'igniter']
+FALCON_THREAD_NAMES = ('queueHandler', 'igniter')
 
 
 @app.route("/health")
@@ -11,5 +12,5 @@ def status():
     for thread in active_falcon_threads:
         if not thread.is_alive():
             return "Error in {} thread {}".format(thread.name, thread.ident)
-    healthy_threads = ['{}-{}'.format(t.name, t.ident) for t in active_falcon_threads]
-    return 'Falcon threads: ' + ', '.join(healthy_threads)
+    falcon_thread_status = {t.name: t.ident for t in active_falcon_threads}
+    return json.dumps(falcon_thread_status)
