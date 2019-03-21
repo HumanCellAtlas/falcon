@@ -1,6 +1,6 @@
 import json
 import threading
-from . import falcon_app as app
+from falcon.run import app
 
 FALCON_THREAD_NAMES = ('queueHandler', 'igniter')
 
