@@ -9,7 +9,9 @@ if __name__ == '__main__':
     igniter = Igniter(config_path)  # instantiate a concrete `Igniter`
 
     handler.spawn_and_start()  # start the thread within the handler
-    igniter.spawn_and_start(handler)  # start the thread within the igniter by passing the handler into it
+    igniter.spawn_and_start(
+        handler
+    )  # start the thread within the igniter by passing the handler into it
 
     # without monitoring the health of the 2 processes, these joins are trivial
     handler.join()

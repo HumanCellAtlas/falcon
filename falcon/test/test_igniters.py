@@ -35,21 +35,26 @@ class TestIgniter(object):
     `@patch`s in the class monkey patches the functions that need to talk to an external resource, so that
     we can test the igniter without actually talking to the external resource, in this case, the Cromwell API.
     """
+
     data_dir = '{}/data/'.format(os.path.split(__file__)[0])
     cromwell_config = 'example_config_cromwell_instance.json'
     config_path = '{0}{1}'.format(data_dir, cromwell_config)
     mock_workflow = queue_handler.Workflow(
-            workflow_id='fake_workflow_id',
-            bundle_uuid='fake_bundle_uuid',
-            bundle_version='fake_bundle_version')
+        workflow_id='fake_workflow_id',
+        bundle_uuid='fake_bundle_uuid',
+        bundle_version='fake_bundle_version',
+    )
 
-    def test_igniter_cannot_spawn_and_start_without_having_a_reference_to_a_queue_handler_object(self):
+    def test_igniter_cannot_spawn_and_start_without_having_a_reference_to_a_queue_handler_object(
+        self
+    ):
         """
         This function asserts the `igniter.spawn_and_start()` can only run by accepting a valid
         `queue_handler.QueueHandler` object, otherwise it will throws a `TypeError`.
         """
-        not_a_real_queue_handler = type('fake_handler', (object,), {
-            'method': lambda self: print('')})()
+        not_a_real_queue_handler = type(
+            'fake_handler', (object,), {'method': lambda self: print('')}
+        )()
 
         with pytest.raises(TypeError):
             test_igniter = igniter.Igniter(self.config_path)
@@ -67,7 +72,8 @@ class TestIgniter(object):
         try:
             test_igniter.spawn_and_start(mock_handler)
             mock_igniter_execution_loop.assert_called_once_with(
-                    test_igniter, mock_handler)
+                test_igniter, mock_handler
+            )
         finally:
             test_igniter.thread.join()
 
@@ -102,7 +108,11 @@ class TestIgniter(object):
 
         assert 'The thread of this igniter is not in a running state.' in error
 
-    @patch('falcon.igniter.CromwellAPI.release_hold', cromwell_simulator.release_workflow_succeed, create=True)
+    @patch(
+        'falcon.igniter.CromwellAPI.release_hold',
+        cromwell_simulator.release_workflow_succeed,
+        create=True,
+    )
     def test_release_workflow_successfully_releases_a_workflow(self, caplog):
         """
         This function asserts the `igniter.release_workflow()` can work properly when it gets 200 OK from the Cromwell.
@@ -116,7 +126,11 @@ class TestIgniter(object):
 
         assert 'Released a workflow fake_workflow_id' in info
 
-    @patch('falcon.igniter.CromwellAPI.release_hold', cromwell_simulator.release_workflow_with_403, create=True)
+    @patch(
+        'falcon.igniter.CromwellAPI.release_hold',
+        cromwell_simulator.release_workflow_with_403,
+        create=True,
+    )
     def test_release_workflow_handles_403_response_code(self, caplog):
         """
         This function asserts the `igniter.release_workflow()` can work properly when it gets 403 error from the
@@ -131,7 +145,11 @@ class TestIgniter(object):
 
         assert 'Failed to release a workflow fake_workflow_id' in warn
 
-    @patch('falcon.igniter.CromwellAPI.release_hold', cromwell_simulator.release_workflow_with_404, create=True)
+    @patch(
+        'falcon.igniter.CromwellAPI.release_hold',
+        cromwell_simulator.release_workflow_with_404,
+        create=True,
+    )
     def test_release_workflow_handles_404_response_code(self, caplog):
         """
         This function asserts the `igniter.release_workflow()` can work properly when it gets 404 error from the
@@ -146,7 +164,11 @@ class TestIgniter(object):
 
         assert 'Failed to release a workflow fake_workflow_id' in warn
 
-    @patch('falcon.igniter.CromwellAPI.release_hold', cromwell_simulator.release_workflow_with_500, create=True)
+    @patch(
+        'falcon.igniter.CromwellAPI.release_hold',
+        cromwell_simulator.release_workflow_with_500,
+        create=True,
+    )
     def test_release_workflow_handles_500_response_code(self, caplog):
         """
         This function asserts the `igniter.release_workflow()` can work properly when it gets 500 error from the
@@ -161,8 +183,11 @@ class TestIgniter(object):
 
         assert 'Failed to release a workflow fake_workflow_id' in warn
 
-    @patch('falcon.igniter.CromwellAPI.release_hold', cromwell_simulator.release_workflow_raises_ConnectionError,
-           create=True)
+    @patch(
+        'falcon.igniter.CromwellAPI.release_hold',
+        cromwell_simulator.release_workflow_raises_ConnectionError,
+        create=True,
+    )
     def test_release_workflow_handles_connection_error(self, caplog):
         """
         This function asserts the `igniter.release_workflow()` can work properly when it runs into connection errors
@@ -177,8 +202,11 @@ class TestIgniter(object):
 
         assert 'Failed to release a workflow fake_workflow_id' in error
 
-    @patch('falcon.igniter.CromwellAPI.release_hold',
-           cromwell_simulator.release_workflow_raises_RequestException, create=True)
+    @patch(
+        'falcon.igniter.CromwellAPI.release_hold',
+        cromwell_simulator.release_workflow_raises_RequestException,
+        create=True,
+    )
     def test_release_workflow_handles_requests_exception(self, caplog):
         """
         This function asserts the `igniter.release_workflow()` can work properly when it runs into requests exceptions
@@ -214,5 +242,12 @@ class TestIgniter(object):
 
         info = caplog.text
 
-        assert 'The in-memory queue is empty, go back to sleep and wait for the handler to retrieve workflows.' in info
-        assert test_igniter.workflow_start_interval <= elapsed <= test_igniter.workflow_start_interval * 1.5
+        assert (
+            'The in-memory queue is empty, go back to sleep and wait for the handler to retrieve workflows.'
+            in info
+        )
+        assert (
+            test_igniter.workflow_start_interval
+            <= elapsed
+            <= test_igniter.workflow_start_interval * 1.5
+        )

@@ -31,17 +31,23 @@ def get_settings(config_path):
     # Check auth parameters
     if settings['use_caas']:
         if not settings['collection_name']:
-            raise ValueError('To use the Cromwell-as-a-Service, you have to pass in a valid collection name.')
+            raise ValueError(
+                'To use the Cromwell-as-a-Service, you have to pass in a valid collection name.'
+            )
 
         caas_key = os.environ.get('caas_key') or os.environ.get('CAAS_KEY')
         if not caas_key:
-            raise ValueError('No service account json key provided for cromwell-as-a-service.')
+            raise ValueError(
+                'No service account json key provided for cromwell-as-a-service.'
+            )
         else:
             settings['caas_key'] = caas_key
 
     # Check other config parameters
     settings['queue_update_interval'] = int(settings.get('queue_update_interval', 1))
-    settings['workflow_start_interval'] = int(settings.get('workflow_start_interval', 1))
+    settings['workflow_start_interval'] = int(
+        settings.get('workflow_start_interval', 1)
+    )
 
     # Check cromwell query parameters
     query_dict = settings.get('cromwell_query_dict', {})
@@ -56,11 +62,10 @@ def get_cromwell_auth(settings):
     cromwell_url = settings.get('cromwell_url')
     if settings.get('use_caas'):
         return CromwellAuth.harmonize_credentials(
-            url=cromwell_url,
-            service_account_key=settings.get('caas_key')
+            url=cromwell_url, service_account_key=settings.get('caas_key')
         )
     return CromwellAuth.harmonize_credentials(
         url=cromwell_url,
         username=settings.get('cromwell_user'),
-        password=settings.get('cromwell_password')
+        password=settings.get('cromwell_password'),
     )
