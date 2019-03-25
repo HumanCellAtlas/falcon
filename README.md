@@ -6,7 +6,7 @@
 ![Python Version](https://img.shields.io/badge/Python-3.6%20%7C%203.7-green.svg?style=flat-square&logo=python&colorB=blue)
 [![License](https://img.shields.io/github/license/HumanCellAtlas/falcon.svg?style=flat-square)](https://github.com/HumanCellAtlas/falcon/blob/master/LICENSE)
 [![Code style: black](https://img.shields.io/badge/Code%20Style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
-[![Known Vulnerabilities](https://snyk.io/test/github/HumanCellAtlas/falcon/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/HumanCellAtlas/falcon?targetFile=requirements.txt)
+[![Snyk Vulnerabilities for GitHub Repo (Specific Manifest)](https://img.shields.io/snyk/vulnerabilities/github/HumanCellAtlas/falcon/requirements.txt.svg?label=Snyk%20Vulnerabilities&logo=Snyk)](https://snyk.io/test/github/HumanCellAtlas/falcon?targetFile=requirements.txt)
 
 The workflow starter of secondary analysis service.
 
