@@ -1,18 +1,24 @@
 import json
 import threading
 from falcon.run import app
+from flask import abort
 
 FALCON_THREAD_NAMES = ('queueHandler', 'igniter')
 
 
 @app.route("/health")
 def status():
-    active_threads = threading.enumerate()
-    active_falcon_threads = [
-        thread for thread in active_threads if thread.name in FALCON_THREAD_NAMES
-    ]
-    for thread in active_falcon_threads:
-        if not thread.is_alive():
-            return "Error in {} thread {}".format(thread.name, thread.ident)
-    falcon_thread_status = {t.name: t.ident for t in active_falcon_threads}
-    return json.dumps(falcon_thread_status)
+    active_threads = {
+        thread.name: thread for thread in threading.enumerate()
+    }
+    active_falcon_threads = {}
+    for falcon_thread_name in FALCON_THREAD_NAMES:
+        thread = active_threads.get(falcon_thread_name)
+        if falcon_thread_name not in active_threads.keys():
+            abort(500)
+        elif not thread.is_alive():
+            abort(500)
+        else:
+            display_name = '{}-thread'.format(falcon_thread_name)
+            active_falcon_threads[display_name] = str(thread.ident)
+    return json.dumps(active_falcon_threads)
