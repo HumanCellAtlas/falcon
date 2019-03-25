@@ -8,7 +8,6 @@
 [![Code style: black](https://img.shields.io/badge/Code%20Style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 [![Known Vulnerabilities](https://snyk.io/test/github/HumanCellAtlas/falcon/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/HumanCellAtlas/falcon?targetFile=requirements.txt)
 
-
 The workflow starter of secondary analysis service.
 
 Falcon is currently implemented following a semi single-producer-single/multiple consumer multi-threading based model.
