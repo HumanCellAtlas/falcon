@@ -12,4 +12,4 @@ services:
       - ./falcon/config.json:/etc/falcon/config.json
       - ./falcon/caas_key.json:/etc/falcon/caas_key.json
     ports:
-      - 8080:8080
+      - 8000:8000
