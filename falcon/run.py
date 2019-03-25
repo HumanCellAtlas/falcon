@@ -2,12 +2,10 @@ import os
 from flask import Flask
 from falcon.igniter import Igniter
 from falcon.queue_handler import QueueHandler
+from falcon.routes import status
 
 app = Flask(__name__)
-
-from falcon import (
-    routes,
-)  # This must come after the app instantiation to avoid circular imports
+app.add_url_rule("/health", "health", status)
 
 
 config_path = os.environ.get('CONFIG_PATH')
