@@ -9,4 +9,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-ENTRYPOINT ["python", "-um", "falcon.__main__"]
+CMD ["gunicorn", "falcon.run:app", "-b 0.0.0.0:8000"]
