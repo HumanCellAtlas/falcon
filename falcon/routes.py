@@ -6,9 +6,7 @@ FALCON_THREAD_NAMES = ('queueHandler', 'igniter')
 
 
 def status():
-    active_threads = {
-        thread.name: thread for thread in threading.enumerate()
-    }
+    active_threads = {thread.name: thread for thread in threading.enumerate()}
     active_falcon_threads = {}
     for falcon_thread_name in FALCON_THREAD_NAMES:
         thread = active_threads.get(falcon_thread_name)
