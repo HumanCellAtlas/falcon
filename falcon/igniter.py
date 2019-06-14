@@ -58,13 +58,15 @@ class Igniter(object):
         )
         try:
             workflow = handler.workflow_queue.get(block=False)
-            if 'force' not in workflow.labels.keys() and self.workflow_is_duplicate(
-                workflow
-            ):
+            force = (
+                isinstance(workflow.labels, dict) and 'force' in workflow.labels.keys()
+            )
+            if not force and self.workflow_is_duplicate(workflow):
                 logger.info(
-                    'Igniter | Found existing workflow with the same key-data-hash; '
-                    f'skipping workflow {workflow} | {datetime.now()}'
+                    'Igniter | Found existing workflow with the same hash-id; '
+                    f'aborting workflow {workflow} | {datetime.now()}'
                 )
+                self.abort_workflow(workflow)
             else:
                 self.release_workflow(workflow)
         except queue.Empty:
@@ -72,56 +74,6 @@ class Igniter(object):
                 'Igniter | The in-memory queue is empty, go back to sleep and wait for the handler to retrieve '
                 f'workflows. | {datetime.now()}'
             )
-        finally:
-            self.sleep_for(self.workflow_start_interval)
-
-    def release_workflow(self, workflow):
-        try:
-            response = CromwellAPI.release_hold(
-                uuid=workflow.id, auth=self.cromwell_auth
-            )
-            if response.status_code != 200:
-                logger.warning(
-                    f'Igniter | Failed to release a workflow {workflow} | {response.text} | {datetime.now()}'
-                )
-            else:
-                logger.info(
-                    f'Igniter | Released a workflow {workflow} | {datetime.now()}'
-                )
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.RequestException,
-        ) as error:
-            logger.error(
-                f'Igniter | Failed to release a workflow {workflow} | {error} | {datetime.now()}'
-            )
-
-    def abort_workflow(self, workflow):
-        try:
-            response = CromwellAPI.abort(uuid=workflow.id, auth=self.cromwell_auth)
-            if response.status_code != 200:
-                logger.warning(
-                    f'Igniter | Failed to abort a workflow {workflow} | {response.text} | {datetime.now()}'
-                )
-            else:
-                logger.info(
-                    f'Igniter | Aborted a workflow {workflow} | {datetime.now()}'
-                )
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.RequestException,
-        ) as error:
-            logger.error(
-                f'Igniter | Failed to abort a workflow {workflow} | {error} | {datetime.now()}'
-            )
-
-    def workflow_is_duplicate(self, workflow):
-        data_hash = workflow.labels.get('key-data-hash')
-        query_dict = {'label': f'key-data-hash:{data_hash}'}
-        try:
-            response = CromwellAPI.query(query_dict, self.cromwell_auth)
-            results = response.json()['results']
-            return any([result['id'] != workflow.id for result in results])
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.RequestException,
@@ -129,6 +81,54 @@ class Igniter(object):
             logger.error(
                 f'Igniter | Failed to query cromwell for existing workflows {error} | {datetime.now()}'
             )
+        finally:
+            self.sleep_for(self.workflow_start_interval)
+
+    def simple_cromwell_workflow_action(
+        self, do_thing, workflow, failure_message, success_message
+    ):
+        try:
+            response = do_thing(uuid=workflow.id, auth=self.cromwell_auth)
+            if response.status_code != 200:
+                logger.warning(
+                    f'Igniter | {failure_message} {workflow} | {response.text} | {datetime.now()}'
+                )
+            else:
+                logger.info(
+                    f'Igniter | {success_message} {workflow} | {datetime.now()}'
+                )
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.RequestException,
+        ) as error:
+            logger.error(
+                f'Igniter | {failure_message} {workflow} | {error} | {datetime.now()}'
+            )
+
+    def release_workflow(self, workflow):
+        self.simple_cromwell_workflow_action(
+            do_thing=CromwellAPI.release_hold,
+            workflow=workflow,
+            failure_message='Failed to release a workflow',
+            success_message='Released a workflow',
+        )
+
+    def abort_workflow(self, workflow):
+        self.simple_cromwell_workflow_action(
+            do_thing=CromwellAPI.abort,
+            workflow=workflow,
+            failure_message='Failed to abort a workflow',
+            success_message='Aborted a workflow',
+        )
+
+    def workflow_is_duplicate(self, workflow):
+        hash_id = workflow.labels.get('hash-id')
+        query_dict = {'label': f'hash-id:{hash_id}'}
+        response = CromwellAPI.query(
+            query_dict, self.cromwell_auth, raise_for_status=True
+        )
+        results = response.json()['results']
+        return any([result['id'] != workflow.id for result in results])
 
     @staticmethod
     def sleep_for(sleep_time):
