@@ -58,10 +58,9 @@ class Igniter(object):
         )
         try:
             workflow = handler.workflow_queue.get(block=False)
-            force = (
-                isinstance(workflow.labels, dict) and 'force' in workflow.labels.keys()
-            )
-            if not force and self.workflow_is_duplicate(workflow):
+            if 'force' not in workflow.labels.keys() and self.workflow_is_duplicate(
+                workflow
+            ):
                 logger.info(
                     'Igniter | Found existing workflow with the same hash-id; '
                     f'aborting workflow {workflow} | {datetime.now()}'

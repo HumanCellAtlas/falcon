@@ -19,7 +19,7 @@ class Workflow(object):
     Besides the features for de-duplication, this class also utilizes a smaller size of chunk in memory.
     """
 
-    def __init__(self, workflow_id, bundle_uuid=None, bundle_version=None, labels=None):
+    def __init__(self, workflow_id, bundle_uuid=None, bundle_version=None, labels={}):
         self.id = workflow_id
         self.bundle_uuid = bundle_uuid
         self.bundle_version = bundle_version
