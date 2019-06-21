@@ -23,13 +23,24 @@ def release_workflow_raises_RequestException(uuid, auth):
     raise requests.exceptions.RequestException
 
 
-def query_workflows_succeed(query_dict, auth):
+def query_workflows_succeed(query_dict, auth, raise_for_status=False):
     response = Mock(spec=Response)
     response.status_code = 200
     response.json.return_value = {
         'results': [
             {'id': str(uuid4()), 'submission': '2018-05-25T19:03:51.736Z'}
             for i in range(random.randint(1, 10))
+        ]
+    }
+    return response
+
+
+def query_workflows_return_fake_workflow(query_dict, auth, raise_for_status=False):
+    response = Mock(spec=Response)
+    response.status_code = 200
+    response.json.return_value = {
+        'results': [
+            {'id': 'fake_workflow_id', 'submission': '2018-05-25T19:03:51.736Z'}
         ]
     }
     return response

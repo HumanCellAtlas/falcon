@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from queue import Queue
 from threading import Thread, get_ident
+from copy import deepcopy
 
 import requests
 from cromwell_tools.cromwell_api import CromwellAPI
@@ -19,10 +20,15 @@ class Workflow(object):
     Besides the features for de-duplication, this class also utilizes a smaller size of chunk in memory.
     """
 
-    def __init__(self, workflow_id, bundle_uuid=None, bundle_version=None):
+    def __init__(self, workflow_id, bundle_uuid=None, bundle_version=None, labels=None):
+
         self.id = workflow_id
         self.bundle_uuid = bundle_uuid
         self.bundle_version = bundle_version
+        if labels is None:
+            self.labels = {}
+        else:
+            self.labels = deepcopy(labels)
 
     def __str__(self):
         return str(self.id)
@@ -287,9 +293,7 @@ class QueueHandler(object):
             Workflow: A concrete `Workflow` instance that has necessary properties.
         """
         workflow_id = workflow_meta.get('id')
-        workflow_labels = workflow_meta.get(
-            'labels'
-        )  # TODO: Integrate this field into Workflow class
+        workflow_labels = workflow_meta.get('labels')
         workflow_bundle_uuid = (
             workflow_labels.get('bundle-uuid')
             if isinstance(workflow_labels, dict)
@@ -300,7 +304,9 @@ class QueueHandler(object):
             if isinstance(workflow_labels, dict)
             else None
         )
-        workflow = Workflow(workflow_id, workflow_bundle_uuid, workflow_bundle_version)
+        workflow = Workflow(
+            workflow_id, workflow_bundle_uuid, workflow_bundle_version, workflow_labels
+        )
         return workflow
 
     @staticmethod

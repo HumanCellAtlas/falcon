@@ -1,6 +1,7 @@
 import logging
 import os
 import timeit
+from requests.exceptions import ConnectionError, HTTPError
 from queue import Queue
 from unittest import mock
 from unittest.mock import patch
@@ -221,15 +222,21 @@ class TestIgniter(object):
 
         assert 'Failed to release a workflow fake_workflow_id' in error
 
+    def setup_queue_handler(self, workflow=None):
+        mock_queue = Queue(maxsize=1)
+        if workflow is not None:
+            mock_queue.get = mock.Mock(return_value=workflow)
+        mock_handler = mock.MagicMock(spec=queue_handler.QueueHandler)
+        mock_handler.workflow_queue = mock_queue
+        return mock_handler
+
     def test_execution_event_sleeps_properly_for_empty_queue(self, caplog):
         """
         This function asserts the `igniter.execution_event()` goes back to sleep when there is no available entry in the
         queue to be processed.
         """
         caplog.set_level(logging.INFO)
-        mock_queue = Queue(maxsize=1)
-        mock_handler = mock.MagicMock(spec=queue_handler.QueueHandler)
-        mock_handler.workflow_queue = mock_queue
+        mock_handler = self.setup_queue_handler()
         assert mock_handler.workflow_queue.empty() is True
 
         test_igniter = igniter.Igniter(self.config_path)
@@ -250,4 +257,130 @@ class TestIgniter(object):
             test_igniter.workflow_start_interval
             <= elapsed
             <= test_igniter.workflow_start_interval * 1.5
+        )
+
+    def execution_event_with_mocks(
+        self,
+        workflow,
+        release_calls,
+        abort_calls,
+        is_dupe_return=None,
+        is_dupe_effect=None,
+    ):
+        mock_handler = self.setup_queue_handler(workflow=workflow)
+
+        test_igniter = igniter.Igniter(self.config_path)
+        test_igniter.workflow_is_duplicate = mock.Mock(
+            return_value=is_dupe_return, side_effect=is_dupe_effect
+        )
+        test_igniter.release_workflow = mock.Mock()
+        test_igniter.abort_workflow = mock.Mock()
+
+        test_igniter.execution_event(mock_handler)
+        assert test_igniter.release_workflow.call_count is release_calls
+        assert test_igniter.abort_workflow.call_count is abort_calls
+
+    def test_execution_event_aborts_duplicate_workflow(self, caplog):
+        """
+        This function asserts the `igniter.execution_event()` aborts a workflow if there
+        are existing workflows in cromwell with the same hash-id  (regardless of status).
+        """
+        caplog.set_level(logging.INFO)
+        self.execution_event_with_mocks(
+            workflow=queue_handler.Workflow('fake_workflow_id'),
+            release_calls=0,
+            abort_calls=1,
+            is_dupe_return=True,
+        )
+
+    def test_execution_event_releases_duplicate_workflow_with_force(self, caplog):
+        """
+        This function asserts the `igniter.execution_event()` releases a workflow if it contains
+        the label 'force' even if there are existing workflows in cromwell with the same
+        key-data hash.
+        """
+        caplog.set_level(logging.INFO)
+        self.execution_event_with_mocks(
+            workflow=queue_handler.Workflow('fake_workflow_id', labels={'force': None}),
+            release_calls=1,
+            abort_calls=0,
+            is_dupe_return=True,
+        )
+
+    def test_execution_event_releases_non_duplicate_workflow(self, caplog):
+        """
+        This function asserts the `igniter.execution_event()` releases a workflow if there
+        are no existing workflows in cromwell with the same hash-id.
+        """
+        caplog.set_level(logging.INFO)
+        self.execution_event_with_mocks(
+            workflow=queue_handler.Workflow('fake_workflow_id'),
+            release_calls=1,
+            abort_calls=0,
+            is_dupe_return=False,
+        )
+
+    def test_execution_event_does_nothing_on_query_failure(self, caplog):
+        """
+        This function asserts the `igniter.execution_event()` goes back to sleep when it fails when
+        checking if there are existing workflows in cromwell with the same hash-id.
+        """
+        caplog.set_level(logging.INFO)
+        self.execution_event_with_mocks(
+            workflow=queue_handler.Workflow('fake_workflow_id'),
+            release_calls=0,
+            abort_calls=0,
+            is_dupe_effect=mock.Mock(side_effect=ConnectionError()),
+        )
+
+    def test_execution_event_does_nothing_when_query_status_not_200(self, caplog):
+        """
+        This function assers the `igniter.execution_event()` goes back to sleep when it
+        receives a non 200 response when checking if there are existing workflows in cromwell
+        with the same hash-id
+        """
+        caplog.set_level(logging.INFO)
+        self.execution_event_with_mocks(
+            workflow=queue_handler.Workflow('fake_workflow_id'),
+            release_calls=0,
+            abort_calls=0,
+            is_dupe_effect=mock.Mock(side_effect=HTTPError()),
+        )
+
+    @patch(
+        'falcon.igniter.CromwellAPI.query',
+        cromwell_simulator.query_workflows_succeed,
+        create=True,
+    )
+    def test_workflow_is_duplicate_returns_true_when_it_finds_workflow_with_same_hash_id(
+        self, caplog
+    ):
+        caplog.set_level(logging.INFO)
+        test_igniter = igniter.Igniter(self.config_path)
+        assert (
+            test_igniter.workflow_is_duplicate(
+                workflow=queue_handler.Workflow(
+                    'fake_workflow_id', labels={'hash-id': ''}
+                )
+            )
+            is True
+        )
+
+    @patch(
+        'falcon.igniter.CromwellAPI.query',
+        cromwell_simulator.query_workflows_return_fake_workflow,
+        create=True,
+    )
+    def test_workflow_is_duplicate_returns_false_when_it_only_finds_input_workflow(
+        self, caplog
+    ):
+        caplog.set_level(logging.INFO)
+        test_igniter = igniter.Igniter(self.config_path)
+        assert (
+            test_igniter.workflow_is_duplicate(
+                workflow=queue_handler.Workflow(
+                    'fake_workflow_id', labels={'hash-id': ''}
+                )
+            )
+            is False
         )

@@ -11,7 +11,7 @@ from falcon import queue_handler
 from falcon import settings
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('falcon.{module_path}'.format(module_path=__name__))
+logger = logging.getLogger(f'falcon.{__name__}')
 
 
 class Igniter(object):
@@ -47,56 +47,87 @@ class Igniter(object):
 
     def execution_loop(self, handler):
         logger.info(
-            'Igniter | Initializing an igniter with thread ID => {0} | {1}'.format(
-                get_ident(), datetime.now()
-            )
+            f'Igniter | Initializing an igniter with thread ID => {get_ident()} | {datetime.now()}'
         )
         while True:
             self.execution_event(handler)
 
     def execution_event(self, handler):
         logger.info(
-            'Igniter | Igniter thread {0} is warmed up and running. | {1}'.format(
-                get_ident(), datetime.now()
-            )
+            f'Igniter | Igniter thread {get_ident()} is warmed up and running. | {datetime.now()}'
         )
         try:
             workflow = handler.workflow_queue.get(block=False)
-            self.release_workflow(workflow)
+            if 'force' not in workflow.labels.keys() and self.workflow_is_duplicate(
+                workflow
+            ):
+                logger.info(
+                    'Igniter | Found existing workflow with the same hash-id; '
+                    f'aborting workflow {workflow} | {datetime.now()}'
+                )
+                self.abort_workflow(workflow)
+            else:
+                self.release_workflow(workflow)
         except queue.Empty:
             logger.info(
                 'Igniter | The in-memory queue is empty, go back to sleep and wait for the handler to retrieve '
-                'workflows. | {0}'.format(datetime.now())
+                f'workflows. | {datetime.now()}'
+            )
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.RequestException,
+        ) as error:
+            logger.error(
+                f'Igniter | Failed to query cromwell for existing workflows {error} | {datetime.now()}'
             )
         finally:
             self.sleep_for(self.workflow_start_interval)
 
-    def release_workflow(self, workflow):
+    def simple_cromwell_workflow_action(
+        self, do_thing, workflow, failure_message, success_message
+    ):
         try:
-            response = CromwellAPI.release_hold(
-                uuid=workflow.id, auth=self.cromwell_auth
-            )
+            response = do_thing(uuid=workflow.id, auth=self.cromwell_auth)
             if response.status_code != 200:
                 logger.warning(
-                    'Igniter | Failed to release a workflow {0} | {1} | {2}'.format(
-                        workflow, response.text, datetime.now()
-                    )
+                    f'Igniter | {failure_message} {workflow} | {response.text} | {datetime.now()}'
                 )
             else:
                 logger.info(
-                    'Igniter | Released a workflow {0} | {1}'.format(
-                        workflow, datetime.now()
-                    )
+                    f'Igniter | {success_message} {workflow} | {datetime.now()}'
                 )
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.RequestException,
         ) as error:
             logger.error(
-                'Igniter | Failed to release a workflow {0}| {1} | {2}'.format(
-                    workflow, error, datetime.now()
-                )
+                f'Igniter | {failure_message} {workflow} | {error} | {datetime.now()}'
             )
+
+    def release_workflow(self, workflow):
+        self.simple_cromwell_workflow_action(
+            do_thing=CromwellAPI.release_hold,
+            workflow=workflow,
+            failure_message='Failed to release a workflow',
+            success_message='Released a workflow',
+        )
+
+    def abort_workflow(self, workflow):
+        self.simple_cromwell_workflow_action(
+            do_thing=CromwellAPI.abort,
+            workflow=workflow,
+            failure_message='Failed to abort a workflow',
+            success_message='Aborted a workflow',
+        )
+
+    def workflow_is_duplicate(self, workflow):
+        hash_id = workflow.labels.get('hash-id')
+        query_dict = {'label': f'hash-id:{hash_id}'}
+        response = CromwellAPI.query(
+            query_dict, self.cromwell_auth, raise_for_status=True
+        )
+        results = response.json()['results']
+        return any([result['id'] != workflow.id for result in results])
 
     @staticmethod
     def sleep_for(sleep_time):
