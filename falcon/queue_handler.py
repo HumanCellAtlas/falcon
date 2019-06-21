@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from queue import Queue
 from threading import Thread, get_ident
+from copy import deepcopy
 
 import requests
 from cromwell_tools.cromwell_api import CromwellAPI
@@ -19,11 +20,15 @@ class Workflow(object):
     Besides the features for de-duplication, this class also utilizes a smaller size of chunk in memory.
     """
 
-    def __init__(self, workflow_id, bundle_uuid=None, bundle_version=None, labels={}):
+    def __init__(self, workflow_id, bundle_uuid=None, bundle_version=None, labels=None):
+
         self.id = workflow_id
         self.bundle_uuid = bundle_uuid
         self.bundle_version = bundle_version
-        self.labels = labels
+        if labels is None:
+            self.labels = {}
+        else:
+            self.labels = deepcopy(labels)
 
     def __str__(self):
         return str(self.id)
