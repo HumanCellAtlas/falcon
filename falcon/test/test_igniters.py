@@ -391,7 +391,7 @@ class TestIgniter(object):
         create=True,
     )
     def test_workflow_is_duplicate_handles_duplicate_bundle_version_in_queue(
-            self, caplog
+        self, caplog
     ):
         caplog.set_level(logging.INFO)
         test_igniter = igniter.Igniter(self.config_path)
@@ -400,7 +400,7 @@ class TestIgniter(object):
                 workflow=queue_handler.Workflow(
                     'fake_workflow_id_1',
                     bundle_version='2019-08-22T120000.000000Z',
-                    labels={'hash-id': '12345'}
+                    labels={'hash-id': '12345'},
                 )
             )
             is False
@@ -412,7 +412,7 @@ class TestIgniter(object):
         create=True,
     )
     def test_workflow_is_duplicate_returns_true_if_newer_bundle_version_is_on_hold(
-            self, caplog
+        self, caplog
     ):
         caplog.set_level(logging.INFO)
         test_igniter = igniter.Igniter(self.config_path)
@@ -421,12 +421,11 @@ class TestIgniter(object):
                 workflow=queue_handler.Workflow(
                     'fake_workflow_id_1',
                     bundle_version='2019-08-22T120000.000000Z',
-                    labels={'hash-id': '12345'}
+                    labels={'hash-id': '12345'},
                 )
             )
             is True
         )
-
 
     @patch(
         'falcon.igniter.CromwellAPI.query',
@@ -434,7 +433,7 @@ class TestIgniter(object):
         create=True,
     )
     def test_workflow_is_duplicate_returns_false_if_bundle_is_the_latest_version_on_hold(
-            self, caplog
+        self, caplog
     ):
         caplog.set_level(logging.INFO)
         test_igniter = igniter.Igniter(self.config_path)
@@ -443,7 +442,7 @@ class TestIgniter(object):
                 workflow=queue_handler.Workflow(
                     'fake_workflow_id_2',
                     bundle_version='2019-08-22T130000.000000Z',
-                    labels={'hash-id': '12345'}
+                    labels={'hash-id': '12345'},
                 )
             )
             is False
