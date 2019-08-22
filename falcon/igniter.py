@@ -136,7 +136,8 @@ class Igniter(object):
                 return True
             else:
                 on_hold.sort(key=lambda x: self.get_bundle_datetime(x['labels']['bundle-version']))
-                return workflow.bundle_version < self.get_bundle_datetime(on_hold[-1]['labels']['bundle-version'])
+                workflow_bundle_version = self.get_bundle_datetime(workflow.bundle_version)
+                return workflow_bundle_version < self.get_bundle_datetime(on_hold[-1]['labels']['bundle-version'])
         return False
 
     @staticmethod

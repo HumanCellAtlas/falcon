@@ -384,3 +384,67 @@ class TestIgniter(object):
             )
             is False
         )
+
+    @patch(
+        'falcon.igniter.CromwellAPI.query',
+        cromwell_simulator.query_workflows_returns_on_hold_workflows_with_duplicate_bundle_versions,
+        create=True,
+    )
+    def test_workflow_is_duplicate_handles_duplicate_bundle_version_in_queue(
+            self, caplog
+    ):
+        caplog.set_level(logging.INFO)
+        test_igniter = igniter.Igniter(self.config_path)
+        assert (
+            test_igniter.workflow_is_duplicate(
+                workflow=queue_handler.Workflow(
+                    'fake_workflow_id_1',
+                    bundle_version='2019-08-22T120000.000000Z',
+                    labels={'hash-id': '12345'}
+                )
+            )
+            is False
+        )
+
+    @patch(
+        'falcon.igniter.CromwellAPI.query',
+        cromwell_simulator.query_workflows_returns_workflows_with_different_bundle_versions,
+        create=True,
+    )
+    def test_workflow_is_duplicate_returns_true_if_newer_bundle_version_is_on_hold(
+            self, caplog
+    ):
+        caplog.set_level(logging.INFO)
+        test_igniter = igniter.Igniter(self.config_path)
+        assert (
+            test_igniter.workflow_is_duplicate(
+                workflow=queue_handler.Workflow(
+                    'fake_workflow_id_1',
+                    bundle_version='2019-08-22T120000.000000Z',
+                    labels={'hash-id': '12345'}
+                )
+            )
+            is True
+        )
+
+
+    @patch(
+        'falcon.igniter.CromwellAPI.query',
+        cromwell_simulator.query_workflows_returns_workflows_with_different_bundle_versions,
+        create=True,
+    )
+    def test_workflow_is_duplicate_returns_false_if_bundle_is_the_latest_version_on_hold(
+            self, caplog
+    ):
+        caplog.set_level(logging.INFO)
+        test_igniter = igniter.Igniter(self.config_path)
+        assert (
+            test_igniter.workflow_is_duplicate(
+                workflow=queue_handler.Workflow(
+                    'fake_workflow_id_2',
+                    bundle_version='2019-08-22T130000.000000Z',
+                    labels={'hash-id': '12345'}
+                )
+            )
+            is False
+        )

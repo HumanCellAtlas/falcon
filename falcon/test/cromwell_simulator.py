@@ -28,7 +28,7 @@ def query_workflows_succeed(query_dict, auth, raise_for_status=False):
     response.status_code = 200
     response.json.return_value = {
         'results': [
-            {'id': str(uuid4()), 'submission': '2018-05-25T19:03:51.736Z'}
+            {'id': str(uuid4()), 'status': 'Succeeded', 'submission': '2018-05-25T19:03:51.736Z'}
             for i in range(random.randint(1, 10))
         ]
     }
@@ -40,7 +40,55 @@ def query_workflows_return_fake_workflow(query_dict, auth, raise_for_status=Fals
     response.status_code = 200
     response.json.return_value = {
         'results': [
+
             {'id': 'fake_workflow_id', 'submission': '2018-05-25T19:03:51.736Z'}
+        ]
+    }
+    return response
+
+
+def query_workflows_returns_on_hold_workflows_with_duplicate_bundle_versions(query_dict, auth, raise_for_status=False):
+    response = Mock(spec=Response)
+    response.status_code = 200
+    labels = {
+        'bundle-uuid': 'bundle_1',
+        'bundle-version': '2019-08-22T120000.000000Z',
+        'hash-id': '12345'
+    }
+    response.json.return_value = {
+        'results': [
+            {'id': 'fake_workflow_id_1', 'status': 'On Hold', 'submission': '2018-05-25T19:03:51.736Z', 'labels': labels},
+            {'id': 'fake_workflow_id_2', 'status': 'On Hold', 'submission': '2018-05-25T19:04:51.736Z', 'labels': labels}
+        ]
+    }
+    return response
+
+
+def query_workflows_returns_workflows_with_different_bundle_versions(query_dict, auth, raise_for_status=False):
+    response = Mock(spec=Response)
+    response.status_code = 200
+    response.json.return_value = {
+        'results': [
+            {
+                'id': 'fake_workflow_id_1',
+                'status': 'On Hold',
+                'submission': '2018-05-25T19:03:51.736Z',
+                'labels': {
+                    'bundle-uuid': 'bundle_1',
+                    'bundle-version': '2019-08-22T120000.000000Z',
+                    'hash-id': '12345'
+                }
+            },
+            {
+                'id': 'fake_workflow_id_2',
+                'status': 'On Hold',
+                'submission': '2018-05-25T19:04:51.736Z',
+                'labels': {
+                    'bundle-uuid': 'bundle_1',
+                    'bundle-version': '2019-08-22T130000.000000Z',
+                    'hash-id': '12345'
+                }
+            }
         ]
     }
     return response
