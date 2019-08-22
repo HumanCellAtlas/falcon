@@ -127,7 +127,21 @@ class Igniter(object):
             query_dict, self.cromwell_auth, raise_for_status=True
         )
         results = response.json()['results']
-        return any([result['id'] != workflow.id for result in results])
+        existing_workflows = [result for result in results if result['id'] != workflow.id]
+        if len(existing_workflows) > 0:
+            # If there are other on-hold workflows with the same hash-id,
+            # the workflow is a duplicate/should not be run if it has an older bundle version than the others
+            on_hold = [workflow for workflow in existing_workflows if workflow['status'] == 'On Hold']
+            if len(on_hold) == 0:
+                return True
+            else:
+                on_hold.sort(key=lambda x: self.get_bundle_datetime(x['labels']['bundle-version']))
+                return workflow.bundle_version < self.get_bundle_datetime(on_hold[-1]['labels']['bundle-version'])
+        return False
+
+    @staticmethod
+    def get_bundle_datetime(bundle_version):
+        return datetime.strptime(bundle_version, '%Y-%m-%dT%H%M%S.%fZ')
 
     @staticmethod
     def sleep_for(sleep_time):
