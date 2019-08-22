@@ -156,6 +156,7 @@ class QueueHandler(object):
             ```
         """
         workflow_metas = None
+        query_dict['additionalQueryResultFields'] = 'labels'
         try:
             response = CromwellAPI.query(auth=self.cromwell_auth, query_dict=query_dict)
             if response.status_code != 200:
