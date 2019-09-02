@@ -123,10 +123,8 @@ class Igniter(object):
     def workflow_is_duplicate(self, workflow):
         hash_id = workflow.labels.get('hash-id')
         query_dict = {
-            'label': {
-                'hash-id': hash_id
-            },
-            'additionalQueryResultFields': 'labels'
+            'label': {'hash-id': hash_id},
+            'additionalQueryResultFields': 'labels',
         }
         response = CromwellAPI.query(
             query_dict, self.cromwell_auth, raise_for_status=True
