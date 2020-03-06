@@ -1,20 +1,33 @@
-import json
-import threading
+from datetime import datetime,timedelta
+import os
 from flask import abort
-
-FALCON_THREAD_NAMES = ('queueHandler', 'igniter')
-
+from flask import render_template
+from falcon.settings import docRootPath, docRootFile, maxDelay
 
 def status():
-    active_threads = {thread.name: thread for thread in threading.enumerate()}
-    active_falcon_threads = {}
-    for falcon_thread_name in FALCON_THREAD_NAMES:
-        thread = active_threads.get(falcon_thread_name)
-        if not thread:
-            abort(500)
-        elif not thread.is_alive():
-            abort(500)
+    """
+    This function reads a status report file creation date and
+    Compares it to the current time
+    Returns: render html file or abort (HTTP code 500) if time
+             difference is greater than max delay
+    TODO : get file name in global variable (settings ?)
+    """
+
+    try:
+        #Get TimeStamp
+        now = datetime.today()
+
+        #read status report.html modified datetime
+        file_mod_time = datetime.fromtimestamp(os.stat(docRootPath+docRootFile).st_mtime)  # This is a datetime.datetime object!
+
+        #Define max delay to 5 mins
+        max_delay = timedelta(minutes=maxDelay)
+
+        # if reached max delay abort else render status report file
+        if now - file_mod_time > max_delay:
+            abort(500,'reached max delay')
         else:
-            display_name = '{}-thread'.format(falcon_thread_name)
-            active_falcon_threads[display_name] = str(thread.ident)
-    return json.dumps(active_falcon_threads)
+            return render_template(docRootFile)
+
+    except Exception as exc:
+        abort(500,exc)

@@ -2,6 +2,10 @@ import json
 import os
 from cromwell_tools.cromwell_auth import CromwellAuth
 
+#Global variables
+docRootPath='falcon/templates/'     #Path to Flask docRoot - in the repo
+docRootFile='handler_status.html'    #file to be returned to liveness Probe - in the repo
+maxDelay=5  # we consider if docRootFile is older than 5 mins then the Thread is Frozen
 
 def get_settings(config_path):
     """This function loads the config.json file based on the path and return the assembled settings dictionary.

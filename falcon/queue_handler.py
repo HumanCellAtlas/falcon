@@ -99,9 +99,42 @@ class QueueHandler(object):
             )
         )
         while True:
+            self.report_my_status()
             self.execution_event()
 
+    def report_my_status(self):
+        """
+        Write a report_status.html file containing the timestamp when it ran
+        """
+        try :
+            #Get timestamp now
+            # Converting datetime object to string
+            dateTimeObj = datetime.now()
+            timestampStr = dateTimeObj.strftime("%d-%b-%Y (%H:%M:%S)")
+
+            #Update file report_status.html with time so we can get the info from a curl
+            f = open(settings.docRootPath+settings.docRootFile, 'w')
+
+            #content of html file with timestamp
+            header = """<html><br><head></head><br><body><br><p>
+            """
+            body='Time when report my status was generated: '+timestampStr
+            footer = """
+            </p><br></body><br></html>"""
+
+            f.write("{0}{1}{2}".format(header, body, footer))
+            f.close()
+            logger.info(
+                'QueueHandler | QueueHandler report status ran successfully '
+            )
+        except Exception as exc:
+            logger.warning(
+                'QueueHandler | QueueHandler report Status failed with Exception: | {0}'.format(exc)
+            )
+
+
     def execution_event(self):
+
         logger.info(
             'QueueHandler | QueueHandler thread {0} is warmed up and running. | {1}'.format(
                 get_ident(), datetime.now()
@@ -117,7 +150,8 @@ class QueueHandler(object):
             self.set_queue(self.create_empty_queue(-1))
 
             self.enqueue(workflows)
-        else:
+        else :
+
             logger.info(
                 'QueueHandler | Cannot fetch any workflow from Cromwell, go back to sleep and wait for next '
                 'attempt. | {0}'.format(datetime.now())
