@@ -1,5 +1,12 @@
 <html>
 <head></head>
-<body><p> Timestamp here
+<body><p> Timestamp should be Here
+    ############### NOTES #####################
+    For some caching issue it might not show up
+    Running : Curl -I http://localhost:8000/health
+    Result should confirm cache headers are correct (no-cache, etc)
+    checking the content of the file on he disk should confirm this is a cache issue
+    cat /falcon/templates/handler_status.html
+    ###########################################
 </p></body>
 </html>
