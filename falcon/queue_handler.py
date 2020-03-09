@@ -11,7 +11,7 @@ from cromwell_tools.cromwell_api import CromwellAPI
 from falcon import settings
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('falcon.{module_path}'.format(module_path=__name__))
+logger = logging.getLogger("falcon.{module_path}".format(module_path=__name__))
 
 
 class Workflow(object):
@@ -72,15 +72,15 @@ class QueueHandler(object):
         self.thread = None
         self.settings = settings.get_settings(config_path)
         self.cromwell_auth = settings.get_cromwell_auth(self.settings)
-        self.queue_update_interval = self.settings.get('queue_update_interval')
-        self.cromwell_query_dict = self.settings.get('cromwell_query_dict')
+        self.queue_update_interval = self.settings.get("queue_update_interval")
+        self.cromwell_query_dict = self.settings.get("cromwell_query_dict")
 
     def spawn_and_start(self):
         """
         Starts the thread, which is an instance variable. If thread has not been created, spawns it and then starts it.
         """
         if not self.thread:
-            self.thread = Thread(target=self.execution_loop, name='queueHandler')
+            self.thread = Thread(target=self.execution_loop, name="queueHandler")
         self.thread.start()
 
     def join(self):
@@ -90,53 +90,22 @@ class QueueHandler(object):
         try:
             self.thread.join()
         except (AttributeError, AssertionError):
-            logger.error('The thread of this queue handler is not in a running state.')
+            logger.error("The thread of this queue handler is not in a running state.")
 
     def execution_loop(self):
         logger.info(
-            'QueueHandler | Initializing the queue handler with thread => {0} | {1}'.format(
+            "QueueHandler | Initializing the queue handler with thread => {0} | {1}".format(
                 get_ident(), datetime.now()
             )
         )
         while True:
-            self.report_my_status()
+            self.report_my_status()  # Execute first to generate new handler_status.html
             self.execution_event()
-
-    def report_my_status(self):
-        """
-        Write a report_status.html file containing the timestamp when it ran
-        """
-        try :
-            #Get timestamp now
-            # Converting datetime object to string
-            dateTimeObj = datetime.now()
-            timestampStr = dateTimeObj.strftime("%d-%b-%Y (%H:%M:%S)")
-
-            #Update file report_status.html with time so we can get the info from a curl
-            f = open(settings.docRootPath+settings.docRootFile, 'w')
-
-            #content of html file with timestamp
-            header = """<html><br><head></head><br><body><br><p>
-            """
-            body='Time when report my status was generated: '+timestampStr
-            footer = """
-            </p><br></body><br></html>"""
-
-            f.write("{0}{1}{2}".format(header, body, footer))
-            f.close()
-            logger.info(
-                'QueueHandler | QueueHandler report status ran successfully '
-            )
-        except Exception as exc:
-            logger.warning(
-                'QueueHandler | QueueHandler report Status failed with Exception: | {0}'.format(exc)
-            )
-
 
     def execution_event(self):
 
         logger.info(
-            'QueueHandler | QueueHandler thread {0} is warmed up and running. | {1}'.format(
+            "QueueHandler | QueueHandler thread {0} is warmed up and running. | {1}".format(
                 get_ident(), datetime.now()
             )
         )
@@ -150,11 +119,10 @@ class QueueHandler(object):
             self.set_queue(self.create_empty_queue(-1))
 
             self.enqueue(workflows)
-        else :
-
+        else:
             logger.info(
-                'QueueHandler | Cannot fetch any workflow from Cromwell, go back to sleep and wait for next '
-                'attempt. | {0}'.format(datetime.now())
+                "QueueHandler | Cannot fetch any workflow from Cromwell, go back to sleep and wait for next "
+                "attempt. | {0}".format(datetime.now())
             )
         self.sleep_for(self.queue_update_interval)
 
@@ -190,32 +158,32 @@ class QueueHandler(object):
             ```
         """
         workflow_metas = None
-        query_dict['additionalQueryResultFields'] = 'labels'
+        query_dict["additionalQueryResultFields"] = "labels"
         try:
             response = CromwellAPI.query(auth=self.cromwell_auth, query_dict=query_dict)
             if response.status_code != 200:
                 logger.warning(
-                    'QueueHandler | Failed to retrieve workflows from Cromwell | {0} | {1}'.format(
+                    "QueueHandler | Failed to retrieve workflows from Cromwell | {0} | {1}".format(
                         response.text, datetime.now()
                     )
                 )
             else:
-                workflow_metas = response.json()['results']
+                workflow_metas = response.json()["results"]
                 num_workflows = len(workflow_metas)
                 logger.info(
-                    'QueueHandler | Retrieved {0} workflows from Cromwell. | {1}'.format(
+                    "QueueHandler | Retrieved {0} workflows from Cromwell. | {1}".format(
                         num_workflows, datetime.now()
                     )
                 )
                 logger.debug(
-                    'QueueHandler | {0} | {1}'.format(workflow_metas, datetime.now())
+                    "QueueHandler | {0} | {1}".format(workflow_metas, datetime.now())
                 )  # TODO: remove this or not?
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.RequestException,
         ) as error:
             logger.error(
-                'QueueHandler | Failed to retrieve workflows from Cromwell | {0} | {1}'.format(
+                "QueueHandler | Failed to retrieve workflows from Cromwell | {0} | {1}".format(
                     error, datetime.now()
                 )
             )
@@ -269,7 +237,7 @@ class QueueHandler(object):
         """
         for workflow in workflows:
             logger.debug(
-                'QueueHandler | Enqueuing workflow {0} | {1}'.format(
+                "QueueHandler | Enqueuing workflow {0} | {1}".format(
                     workflow, datetime.now()
                 )
             )
@@ -327,15 +295,15 @@ class QueueHandler(object):
         Returns:
             Workflow: A concrete `Workflow` instance that has necessary properties.
         """
-        workflow_id = workflow_meta.get('id')
-        workflow_labels = workflow_meta.get('labels')
+        workflow_id = workflow_meta.get("id")
+        workflow_labels = workflow_meta.get("labels")
         workflow_bundle_uuid = (
-            workflow_labels.get('bundle-uuid')
+            workflow_labels.get("bundle-uuid")
             if isinstance(workflow_labels, dict)
             else None
         )
         workflow_bundle_version = (
-            workflow_labels.get('bundle-version')
+            workflow_labels.get("bundle-version")
             if isinstance(workflow_labels, dict)
             else None
         )
@@ -378,20 +346,20 @@ class QueueHandler(object):
         Returns:
             bool: The return value. True if the workflow_list is sorted oldest first, False otherwise.
         """
-        CROMWELL_DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
+        CROMWELL_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
         try:
             head = datetime.strptime(
-                str(workflow_list[0].get('submission')), CROMWELL_DATETIME_FORMAT
+                str(workflow_list[0].get("submission")), CROMWELL_DATETIME_FORMAT
             )
             tail = datetime.strptime(
-                str(workflow_list[-1].get('submission')), CROMWELL_DATETIME_FORMAT
+                str(workflow_list[-1].get("submission")), CROMWELL_DATETIME_FORMAT
             )
             return head <= tail
         except ValueError:
             logger.error(
-                'Queue | An error happened when try to parse the submission timestamps, will assume oldest first '
-                'for'
-                ' the workflows returned from Cromwell | {0}'.format(datetime.now())
+                "Queue | An error happened when try to parse the submission timestamps, will assume oldest first "
+                "for"
+                " the workflows returned from Cromwell | {0}".format(datetime.now())
             )
             return True
 
@@ -415,3 +383,34 @@ class QueueHandler(object):
         This deep de-duplication should search the given bundle-uuid and bundle-version in the whole history.
         """
         return NotImplemented
+
+    @staticmethod
+    def report_my_status():
+        """
+        Write a report_status.html file containing the timestamp when it ran
+        """
+        try:
+            # Get timestamp now
+            # Converting datetime object to string
+            dateTimeObj = datetime.now()
+            timestampStr = dateTimeObj.strftime("%d-%b-%Y (%H:%M:%S)")
+
+            # Update file report_status.html with time so we can get the info from a curl
+            f = open(settings.docRootPath + settings.docRootFile, "w")
+
+            # content of html file with timestamp
+            header = """<html><br><head></head><br><body><br><p>
+                """
+            body = "Time when report my status was generated: " + timestampStr
+            footer = """
+                </p><br></body><br></html>"""
+
+            f.write("{0}{1}{2}".format(header, body, footer))
+            f.close()
+            logger.info("QueueHandler | QueueHandler report status ran successfully ")
+        except Exception as exc:
+            logger.warning(
+                "QueueHandler | QueueHandler report Status failed with Exception: | {0}".format(
+                    exc
+                )
+            )

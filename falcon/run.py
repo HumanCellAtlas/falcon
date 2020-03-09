@@ -7,6 +7,7 @@ from falcon.routes import status
 app = Flask(__name__, static_url_path='')
 
 # prevent cached responses
+# TODO : Does not seem to prevent caching issue when using curl http://localhost:8000/health in the container.
 @app.after_request
 def add_header(r):
     """
@@ -16,6 +17,7 @@ def add_header(r):
     r.headers["Cache-Control"] = "no-store, max-age=0"
     r.headers["Pragma"] = "no-cache"
     return r
+
 
 # Define endpoint and assign to status function
 app.add_url_rule("/health", "health", status)
