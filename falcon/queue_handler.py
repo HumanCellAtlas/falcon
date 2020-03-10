@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 import time
 from datetime import datetime
 from queue import Queue
@@ -396,23 +396,22 @@ class QueueHandler(object):
             dateTimeObj = datetime.now()
             timestampStr = dateTimeObj.strftime("%d-%b-%Y (%H:%M:%S)")
 
-            # Get filename full path and create path if not null
-            filename = settings.docRootPath + settings.docRootFile
-            if settings.docRootPath:
-                os.makedirs(os.path.dirname(filename), exist_ok=True)
+            # Get filename full path and creates it
+            path = Path(settings.docRootPath)
+            path.mkdir(parents=True, exist_ok=True)
+            filename = path.joinpath(settings.docRootFile)
 
             # create and update handler_status.html with time so we can get the info from a curl
-            f = open(filename, "w")
+            with filename.open("w") as f:
+                # content of html file with timestamp
+                header = """<html><br><head></head><br><body><br><p>
+                    """
+                body = "Time when report my status was generated: " + timestampStr
+                footer = """
+                    </p><br></body><br></html>"""
 
-            # content of html file with timestamp
-            header = """<html><br><head></head><br><body><br><p>
-                """
-            body = "Time when report my status was generated: " + timestampStr
-            footer = """
-                </p><br></body><br></html>"""
-
-            f.write("{0}{1}{2}".format(header, body, footer))
-            f.close()
+                f.write("{0}{1}{2}".format(header, body, footer))
+                f.close()
             logger.info("QueueHandler | QueueHandler report status ran successfully ")
         except Exception as exc:
             logger.warning(
