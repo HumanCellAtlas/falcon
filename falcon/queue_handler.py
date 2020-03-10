@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from datetime import datetime
 from queue import Queue
@@ -395,8 +396,13 @@ class QueueHandler(object):
             dateTimeObj = datetime.now()
             timestampStr = dateTimeObj.strftime("%d-%b-%Y (%H:%M:%S)")
 
-            # Update file report_status.html with time so we can get the info from a curl
-            f = open(settings.docRootPath + settings.docRootFile, "w")
+            # Get filename full path and create path if not null
+            filename = settings.docRootPath + settings.docRootFile
+            if settings.docRootPath:
+                os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+            # create and update handler_status.html with time so we can get the info from a curl
+            f = open(filename, "w")
 
             # content of html file with timestamp
             header = """<html><br><head></head><br><body><br><p>
