@@ -411,7 +411,7 @@ class QueueHandler(object):
                     </p><br></body><br></html>"""
 
                 f.write("{0}{1}{2}".format(header, body, footer))
-                f.close()
+
             logger.info("QueueHandler | QueueHandler report status ran successfully ")
         except Exception as exc:
             logger.warning(
