@@ -27,7 +27,7 @@ def status():
 
         # if reached max delay abort else render status report file
         if now - file_mod_time > max_delay:
-            abort(500, 'reached max delay')
+            abort(500, "reached max delay")
         else:
             return render_template(docRootFile)
 

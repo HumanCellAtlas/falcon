@@ -4,7 +4,7 @@ from falcon.igniter import Igniter
 from falcon.queue_handler import QueueHandler
 from falcon.routes import status
 
-app = Flask(__name__, static_url_path='')
+app = Flask(__name__, static_url_path="")
 
 # prevent cached responses
 # TODO : Does not seem to prevent caching issue when using curl http://localhost:8000/health in the container.
@@ -22,7 +22,7 @@ def add_header(r):
 # Define endpoint and assign to status function
 app.add_url_rule("/health", "health", status)
 
-config_path = os.environ.get('CONFIG_PATH')
+config_path = os.environ.get("CONFIG_PATH")
 handler = QueueHandler(config_path)  # instantiate a concrete `QueueHandler`
 igniter = Igniter(config_path)  # instantiate a concrete `Igniter`
 
